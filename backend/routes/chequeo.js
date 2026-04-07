@@ -1,124 +1,92 @@
 const express = require('express');
-const router = express.Router();
-const db = require('../db/connection');
 
+module.exports = (getPool) => {
+    const router = express.Router();
 
-router.get('/', async (req, res) => {
-    try {
-        const { tipo, idioma = 'es' } = req.query;
-        
-        if (!tipo) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'Se requiere especificar tipo de vehículo (Moto o Cicla)' 
-            });
+   
+    router.get('/', async (req, res) => {
+        try {
+            const pool = getPool();
+            const [rows] = await pool.query(`
+                SELECT c.*, u.nombre as usuario_nombre 
+                FROM chequeo c 
+                LEFT JOIN usuarios u ON c.usuario_id = u.id 
+                ORDER BY c.fecha DESC
+            `);
+            res.json(rows);
+        } catch (error) {
+            console.error('Error al obtener chequeos:', error.message);
+            res.status(500).json({ error: error.message });
         }
-        
-        let tipoVehiculo = tipo === 'moto' ? 'Moto' : 'Cicla';
-        
-        const [componentes] = await db.query(
-            `SELECT id_comp, nom_comp, nom_comp_en, estado_opt, estado_opt_en, prioridad
-             FROM componentes_seguridad 
-             WHERE tipo_veh = ? OR tipo_veh = 'Ambos'
-             ORDER BY FIELD(prioridad, 'Alta', 'Media', 'Baja')`,
-            [tipoVehiculo]
-        );
-        
-        const data = componentes.map(c => ({
-            id_comp: c.id_comp,
-            nom_comp: (idioma === 'en' && c.nom_comp_en) ? c.nom_comp_en : c.nom_comp,
-            estado_opt: (idioma === 'en' && c.estado_opt_en) ? c.estado_opt_en : c.estado_opt,
-            prioridad: c.prioridad,
-            prioridad_text: traducirPrioridad(c.prioridad, idioma)
-        }));
-        
-        res.json({ success: true, data: data });
-        
-    } catch (error) {
-        console.error('Error en /api/chequeo:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
+    });
 
-
-function traducirPrioridad(prioridad, idioma) {
-    if (idioma === 'en') {
-        const prioridades = {
-            'Alta': 'High',
-            'Media': 'Medium',
-            'Baja': 'Low'
-        };
-        return prioridades[prioridad] || prioridad;
-    }
-    return prioridad;
-}
-
-
-router.post('/verificar', async (req, res) => {
-    try {
-        const { componenteId, estado_actual, id_usuario, idioma = 'es' } = req.body;
-        
-        const [componente] = await db.query(
-            `SELECT nom_comp, nom_comp_en, estado_opt, estado_opt_en, prioridad 
-             FROM componentes_seguridad WHERE id_comp = ?`,
-            [componenteId]
-        );
-        
-        if (componente.length === 0) {
-            const msg = idioma === 'en' ? 'Component not found' : 'Componente no encontrado';
-            return res.status(404).json({ success: false, error: msg });
-        }
-        
-        const nombreComponente = (idioma === 'en' && componente[0].nom_comp_en) 
-            ? componente[0].nom_comp_en 
-            : componente[0].nom_comp;
-            
-        const estadoOptimo = (idioma === 'en' && componente[0].estado_opt_en) 
-            ? componente[0].estado_opt_en 
-            : componente[0].estado_opt;
-        
-        let nivel_urgencia = 'Bajo';
-        let nivel_urgencia_en = 'Low';
-        let mensaje = '';
-        let mensaje_en = '';
-        
-        if (estado_actual === 'malo') {
-            nivel_urgencia = componente[0].prioridad === 'Alta' ? 'Crítico' : 'Alto';
-            nivel_urgencia_en = componente[0].prioridad === 'Alta' ? 'Critical' : 'High';
-            mensaje = `⚠️ ALERTA: Tu ${nombreComponente} necesita revisión. Estado óptimo: ${estadoOptimo}`;
-            mensaje_en = `⚠️ ALERT: Your ${nombreComponente} needs revision. Optimal condition: ${estadoOptimo}`;
-        } else if (estado_actual === 'regular') {
-            nivel_urgencia = 'Medio';
-            nivel_urgencia_en = 'Medium';
-            mensaje = `ℹ️ Tu ${nombreComponente} está en estado regular. Recomendación: ${estadoOptimo}`;
-            mensaje_en = `ℹ️ Your ${nombreComponente} is in regular condition. Recommendation: ${estadoOptimo}`;
-        } else {
-            mensaje = `✅ Tu ${nombreComponente} está en buen estado. ¡Sigue así!`;
-            mensaje_en = `✅ Your ${nombreComponente} is in good condition. Keep it up!`;
-        }
-        
-        
-        if (id_usuario && estado_actual !== 'bueno') {
-            await db.query(
-                `INSERT INTO notificaciones_historial (id_usuario, mensaje, nivel_urgencia) 
-                 VALUES (?, ?, ?)`,
-                [id_usuario, mensaje, nivel_urgencia]
+    
+    router.get('/usuario/:usuarioId', async (req, res) => {
+        const { usuarioId } = req.params;
+        try {
+            const pool = getPool();
+            const [rows] = await pool.query(
+                'SELECT * FROM chequeo WHERE usuario_id = ? ORDER BY fecha DESC',
+                [usuarioId]
             );
+            res.json(rows);
+        } catch (error) {
+            console.error('Error al obtener chequeos del usuario:', error.message);
+            res.status(500).json({ error: error.message });
         }
-        
-        res.json({
-            success: true,
-            componente: nombreComponente,
-            estado_optimo: estadoOptimo,
-            prioridad: componente[0].prioridad,
-            mensaje: idioma === 'en' ? mensaje_en : mensaje,
-            nivel_urgencia: idioma === 'en' ? nivel_urgencia_en : nivel_urgencia
-        });
-        
-    } catch (error) {
-        console.error('Error en /api/chequeo/verificar:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
+    });
 
-module.exports = router;
+    
+    router.post('/', async (req, res) => {
+        const { usuario_id, tipo_vehiculo, estado } = req.body;
+        try {
+            const pool = getPool();
+            const [result] = await pool.query(
+                'INSERT INTO chequeo (usuario_id, tipo_vehiculo, estado) VALUES (?, ?, ?)',
+                [usuario_id, tipo_vehiculo, estado || 'pendiente']
+            );
+            res.status(201).json({ id: result.insertId, message: 'Chequeo registrado' });
+        } catch (error) {
+            console.error('Error al crear chequeo:', error.message);
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    
+    router.put('/:id', async (req, res) => {
+        const { id } = req.params;
+        const { estado } = req.body;
+        try {
+            const pool = getPool();
+            const [result] = await pool.query(
+                'UPDATE chequeo SET estado = ? WHERE id = ?',
+                [estado, id]
+            );
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ error: 'Chequeo no encontrado' });
+            }
+            res.json({ message: 'Chequeo actualizado' });
+        } catch (error) {
+            console.error('Error al actualizar chequeo:', error.message);
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    
+    router.delete('/:id', async (req, res) => {
+        const { id } = req.params;
+        try {
+            const pool = getPool();
+            const [result] = await pool.query('DELETE FROM chequeo WHERE id = ?', [id]);
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ error: 'Chequeo no encontrado' });
+            }
+            res.json({ message: 'Chequeo eliminado' });
+        } catch (error) {
+            console.error('Error al eliminar chequeo:', error.message);
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    return router;
+};

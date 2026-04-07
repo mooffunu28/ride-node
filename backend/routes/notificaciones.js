@@ -1,78 +1,106 @@
 const express = require('express');
-const router = express.Router();
-const db = require('../db/connection');
+
+module.exports = (getPool) => {
+    const router = express.Router();
 
 
-router.get('/:id_usuario', async (req, res) => {
-    try {
-        const { id_usuario } = req.params;
-        const { limite = 10 } = req.query;
-        
-        const [notificaciones] = await db.query(
-            `SELECT id_notif, mensaje, nivel_urgencia, fecha_hora
-             FROM notificaciones_historial 
-             WHERE id_usuario = ?
-             ORDER BY fecha_hora DESC
-             LIMIT ?`,
-            [id_usuario, parseInt(limite)]
-        );
-        
-        res.json({ success: true, data: notificaciones });
-        
-    } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-
-router.post('/', async (req, res) => {
-    try {
-        const { id_usuario, mensaje, nivel_urgencia } = req.body;
-        
-        if (!id_usuario || !mensaje) {
-            return res.status(400).json({ success: false, error: 'Faltan datos requeridos' });
+    router.get('/usuario/:usuarioId', async (req, res) => {
+        const { usuarioId } = req.params;
+        try {
+            const pool = getPool();
+            const [rows] = await pool.query(
+                'SELECT * FROM notificaciones WHERE usuario_id = ? ORDER BY creado_en DESC',
+                [usuarioId]
+            );
+            res.json(rows);
+        } catch (error) {
+            console.error('Error al obtener notificaciones:', error.message);
+            res.status(500).json({ error: error.message });
         }
-        
-        const [result] = await db.query(
-            `INSERT INTO notificaciones_historial (id_usuario, mensaje, nivel_urgencia) 
-             VALUES (?, ?, ?)`,
-            [id_usuario, mensaje, nivel_urgencia || 'Medio']
-        );
-        
-        res.json({ 
-            success: true, 
-            message: 'Notificación creada',
-            id_notif: result.insertId
-        });
-        
-    } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
+    });
 
+    
+    router.get('/usuario/:usuarioId/no-leidas', async (req, res) => {
+        const { usuarioId } = req.params;
+        try {
+            const pool = getPool();
+            const [rows] = await pool.query(
+                'SELECT * FROM notificaciones WHERE usuario_id = ? AND leida = FALSE ORDER BY creado_en DESC',
+                [usuarioId]
+            );
+            res.json(rows);
+        } catch (error) {
+            console.error('Error al obtener notificaciones no leídas:', error.message);
+            res.status(500).json({ error: error.message });
+        }
+    });
 
-router.delete('/limpiar/:id_usuario', async (req, res) => {
-    try {
-        const { id_usuario } = req.params;
-        const { dias = 30 } = req.query;
-        
-        const [result] = await db.query(
-            `DELETE FROM notificaciones_historial 
-             WHERE id_usuario = ? AND fecha_hora < DATE_SUB(NOW(), INTERVAL ? DAY)`,
-            [id_usuario, parseInt(dias)]
-        );
-        
-        res.json({ 
-            success: true, 
-            message: `Se eliminaron ${result.affectedRows} notificaciones antiguas`
-        });
-        
-    } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
+    
+    router.post('/', async (req, res) => {
+        const { usuario_id, mensaje } = req.body;
+        try {
+            const pool = getPool();
+            const [result] = await pool.query(
+                'INSERT INTO notificaciones (usuario_id, mensaje) VALUES (?, ?)',
+                [usuario_id, mensaje]
+            );
+            res.status(201).json({ id: result.insertId, message: 'Notificación creada' });
+        } catch (error) {
+            console.error('Error al crear notificación:', error.message);
+            res.status(500).json({ error: error.message });
+        }
+    });
 
-module.exports = router;
+    
+    router.put('/:id/leer', async (req, res) => {
+        const { id } = req.params;
+        try {
+            const pool = getPool();
+            const [result] = await pool.query(
+                'UPDATE notificaciones SET leida = TRUE WHERE id = ?',
+                [id]
+            );
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ error: 'Notificación no encontrada' });
+            }
+            res.json({ message: 'Notificación marcada como leída' });
+        } catch (error) {
+            console.error('Error al marcar notificación:', error.message);
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+   
+    router.put('/usuario/:usuarioId/leer-todas', async (req, res) => {
+        const { usuarioId } = req.params;
+        try {
+            const pool = getPool();
+            await pool.query(
+                'UPDATE notificaciones SET leida = TRUE WHERE usuario_id = ? AND leida = FALSE',
+                [usuarioId]
+            );
+            res.json({ message: 'Todas las notificaciones marcadas como leídas' });
+        } catch (error) {
+            console.error('Error al marcar notificaciones:', error.message);
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    
+    router.delete('/:id', async (req, res) => {
+        const { id } = req.params;
+        try {
+            const pool = getPool();
+            const [result] = await pool.query('DELETE FROM notificaciones WHERE id = ?', [id]);
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ error: 'Notificación no encontrada' });
+            }
+            res.json({ message: 'Notificación eliminada' });
+        } catch (error) {
+            console.error('Error al eliminar notificación:', error.message);
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    return router;
+};

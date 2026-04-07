@@ -1,80 +1,86 @@
 const express = require('express');
-const router = express.Router();
-const db = require('../db/connection');
 
-router.get('/', async (req, res) => {
-    try {
-        const { tipo, q, idioma = 'es' } = req.query;
-        
-        let sql = `
-            SELECT id_norma, art_num, tipo_multa,
-                   desc_es, desc_en
-            FROM normas_transito 
-            WHERE 1=1
-        `;
-        const params = [];
-        
-  
-        if (tipo && tipo !== 'todos') {
-            sql += ` AND (tipo_vehiculo = ? OR tipo_vehiculo = 'Ambos')`;
-            let tipoVehiculo = tipo === 'moto' ? 'Moto' : (tipo === 'bicicleta' ? 'Cicla' : tipo);
-            params.push(tipoVehiculo);
-        }
-        
-        
-        if (q) {
-            sql += ` AND (desc_es LIKE ? OR desc_en LIKE ? OR art_num LIKE ?)`;
-            params.push(`%${q}%`, `%${q}%`, `%${q}%`);
-        }
-        
-        sql += ` ORDER BY CAST(art_num AS UNSIGNED)`;
-        
-        const [rows] = await db.query(sql, params);
-        
-        const data = rows.map(row => ({
-            id_norma: row.id_norma,
-            art_num: row.art_num,
-            descripcion: idioma === 'en' ? row.desc_en : row.desc_es,
-            tipo_multa: row.tipo_multa
-        }));
-        
-        res.json({ success: true, data: data });
-        
-    } catch (error) {
-        console.error('Error en /api/normas:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
+module.exports = (getPool) => {
+    const router = express.Router();
 
-router.get('/:id', async (req, res) => {
-    try {
+   
+    router.get('/', async (req, res) => {
+        try {
+            const pool = getPool();
+            const [rows] = await pool.query('SELECT * FROM normas ORDER BY id DESC');
+            res.json(rows);
+        } catch (error) {
+            console.error('Error al obtener normas:', error.message);
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    
+    router.get('/:id', async (req, res) => {
         const { id } = req.params;
-        const { idioma = 'es' } = req.query;
-        
-        const [rows] = await db.query(
-            `SELECT id_norma, art_num, tipo_multa, desc_es, desc_en
-             FROM normas_transito WHERE id_norma = ?`,
-            [id]
-        );
-        
-        if (rows.length === 0) {
-            return res.status(404).json({ success: false, error: 'Norma no encontrada' });
+        try {
+            const pool = getPool();
+            const [rows] = await pool.query('SELECT * FROM normas WHERE id = ?', [id]);
+            if (rows.length === 0) {
+                return res.status(404).json({ error: 'Norma no encontrada' });
+            }
+            res.json(rows[0]);
+        } catch (error) {
+            console.error('Error al obtener norma:', error.message);
+            res.status(500).json({ error: error.message });
         }
-        
-        const row = rows[0];
-        const data = {
-            id_norma: row.id_norma,
-            art_num: row.art_num,
-            descripcion: idioma === 'en' ? row.desc_en : row.desc_es,
-            tipo_multa: row.tipo_multa
-        };
-        
-        res.json({ success: true, data: data });
-        
-    } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
+    });
 
-module.exports = router;
+    
+    router.post('/', async (req, res) => {
+        const { titulo, descripcion, categoria } = req.body;
+        try {
+            const pool = getPool();
+            const [result] = await pool.query(
+                'INSERT INTO normas (titulo, descripcion, categoria) VALUES (?, ?, ?)',
+                [titulo, descripcion, categoria]
+            );
+            res.status(201).json({ id: result.insertId, message: 'Norma creada' });
+        } catch (error) {
+            console.error('Error al crear norma:', error.message);
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    
+    router.put('/:id', async (req, res) => {
+        const { id } = req.params;
+        const { titulo, descripcion, categoria } = req.body;
+        try {
+            const pool = getPool();
+            const [result] = await pool.query(
+                'UPDATE normas SET titulo = ?, descripcion = ?, categoria = ? WHERE id = ?',
+                [titulo, descripcion, categoria, id]
+            );
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ error: 'Norma no encontrada' });
+            }
+            res.json({ message: 'Norma actualizada' });
+        } catch (error) {
+            console.error('Error al actualizar norma:', error.message);
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    router.delete('/:id', async (req, res) => {
+        const { id } = req.params;
+        try {
+            const pool = getPool();
+            const [result] = await pool.query('DELETE FROM normas WHERE id = ?', [id]);
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ error: 'Norma no encontrada' });
+            }
+            res.json({ message: 'Norma eliminada' });
+        } catch (error) {
+            console.error('Error al eliminar norma:', error.message);
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    return router;
+};
