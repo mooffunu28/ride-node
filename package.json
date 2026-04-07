@@ -1,0 +1,22 @@
+{
+  "name": "ride-node",
+  "version": "1.0.0",
+  "description": "R.I.D.E - Road Information & Digital Enforcement",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js"
+  },
+  "keywords": ["seguridad", "vial", "motos", "bicicletas"],
+  "author": "R.I.D.E Team",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "mysql2": "^3.6.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.0"
+  }
+}
