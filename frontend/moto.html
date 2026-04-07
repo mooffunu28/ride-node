@@ -139,18 +139,17 @@
             container.innerHTML = `<div class="loading">${t.cargando}</div>`;
             
             try {
-                const response = await fetch(`/api/normas?tipo=moto&idioma=${idiomaActual}`);
+                const response = await fetch(`/api/normas`);
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
                 
-                if (data.success && data.data && data.data.length > 0) {
-                    container.innerHTML = data.data.map(n => {
-                        const articuloTexto = idiomaActual === 'es' ? 'Artículo' : 'Article';
+                if (data && data.length > 0) {
+                    container.innerHTML = data.map(n => {
                         return `
                             <div class="norma-item">
-                                <strong>${articuloTexto} ${n.art_num || 'N/A'}</strong>
+                                <strong>${n.titulo || 'Norma'}</strong>
                                 <p style="margin-top: 0.25rem;">${n.descripcion || 'Sin descripción'}</p>
-                                ${n.tipo_multa ? `<span class="multa-badge">💰 ${t.multa} ${n.tipo_multa}</span>` : ''}
+                                <span class="multa-badge">📌 Categoría: ${n.categoria || 'General'}</span>
                             </div>
                         `;
                     }).join('');
@@ -169,28 +168,25 @@
             container.innerHTML = `<div class="loading">${t.cargando}</div>`;
             
             try {
-                const response = await fetch(`/api/chequeo?tipo=Moto&idioma=${idiomaActual}`);
+                const response = await fetch(`/api/chequeo?tipo=moto`);
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
                 
-                if (data.success && data.data && data.data.length > 0) {
-                    container.innerHTML = data.data.map(c => `
+                if (data && data.length > 0) {
+                    container.innerHTML = data.map(c => `
                         <div class="checklist-item">
-                            <input type="checkbox" class="check-componente" data-comp="${c.id_comp}" data-nombre="${c.nom_comp}">
+                            <input type="checkbox" class="check-componente" data-comp="${c.id}" data-nombre="${c.item_nombre}">
                             <div style="flex:1">
-                                <strong>${c.nom_comp}</strong>
-                                <br><small>${c.estado_opt}</small>
-                                <br><span class="${c.prioridad === 'Alta' ? 'priority-high' : 'priority-medium'}">
-                                    ${t.prioridad}: ${c.prioridad_text || c.prioridad}
-                                </span>
+                                <strong>${c.item_nombre}</strong>
+                                <br><small>Estado: ${c.estado || 'Pendiente'}</small>
                             </div>
                         </div>
                     `).join('');
                     
-                    checkContainer.innerHTML = data.data.map(c => `
+                    checkContainer.innerHTML = data.map(c => `
                         <label class="checkbox-label">
-                            <input type="checkbox" class="check-riesgo" data-nombre="${c.nom_comp}">
-                            ${c.nom_comp} ${t.buen_estado}
+                            <input type="checkbox" class="check-riesgo" data-nombre="${c.item_nombre}">
+                            ${c.item_nombre} ${t.buen_estado}
                         </label>
                     `).join('');
                 } else {
@@ -221,7 +217,7 @@
                 const response = await fetch('/api/riesgo/calcular', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ velocidad: parseInt(velocidad), tipo_vehiculo: 'Moto', componentes, idioma: idiomaActual })
+                    body: JSON.stringify({ velocidad: parseInt(velocidad), tipo_vehiculo: 'moto', componentes, idioma: idiomaActual })
                 });
                 const resultado = await response.json();
                 
