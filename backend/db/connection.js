@@ -1,27 +1,47 @@
-const mysql = require('mysql2');
-require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+const { getPool, testConnection } = require('./db/connection');
 
-const pool = mysql.createPool({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'ride_db',  
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
+const app = express();
+const PORT = process.env.PORT || 8080;
+
+
+app.use(cors());
+app.use(express.json());
+app.use(express.static(path.join(__dirname, '../frontend')));
+
+
+const normasRoutes = require('./routes/normas');
+const usuariosRoutes = require('./routes/usuarios');
+const riesgoRoutes = require('./routes/riesgo');
+const chequeoRoutes = require('./routes/chequeo');
+const notificacionesRoutes = require('./routes/notificaciones');
+
+
+app.use('/api/normas', normasRoutes);
+app.use('/api/usuarios', usuariosRoutes);
+app.use('/api/riesgo', riesgoRoutes);
+app.use('/api/chequeo', chequeoRoutes);
+app.use('/api/notificaciones', notificacionesRoutes);
+
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
-const promisePool = pool.promise();
 
-async function testConnection() {
-    try {
-        const [result] = await promisePool.query('SELECT 1');
-        console.log('✅ Conexión a MySQL establecida correctamente');
-    } catch (error) {
-        console.error('❌ Error de conexión a MySQL:', error.message);
-    }
+if (require.main === module) {
+    app.listen(PORT, async () => {
+        console.log(`🚀 Servidor R.I.D.E. corriendo en:`);
+        console.log(`   📱 Frontend: http://localhost:${PORT}`);
+        console.log(`   🔌 API: http://localhost:${PORT}/api/normas`);
+        console.log(`   👤 Usuarios: http://localhost:${PORT}/api/usuarios`);
+        console.log(`   Presiona Ctrl+C para detener`);
+        
+    // Probar conexión a MySQL
+        await testConnection();
+    });
 }
 
-testConnection();
-
-module.exports = promisePool;
+module.exports = app;

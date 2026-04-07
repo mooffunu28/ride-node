@@ -5,7 +5,8 @@
   "main": "backend/server.js",
   "scripts": {
     "start": "node backend/server.js",
-    "dev": "nodemon backend/server.js"
+    "dev": "nodemon backend/server.js",
+    "build": "echo 'No build step required'"
   },
   "keywords": ["seguridad", "vial", "motos", "bicicletas"],
   "author": "R.I.D.E Team",
