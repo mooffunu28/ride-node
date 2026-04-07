@@ -44,12 +44,12 @@ async function testConnection() {
     }
 }
 
+
 const normasRoutes = require('./routes/normas')(getPool);
 const usuariosRoutes = require('./routes/usuarios')(getPool);
 const riesgoRoutes = require('./routes/riesgo')(getPool);
 const chequeoRoutes = require('./routes/chequeo')(getPool);
 const notificacionesRoutes = require('./routes/notificaciones')(getPool);
-
 
 app.use('/api/normas', normasRoutes);
 app.use('/api/usuarios', usuariosRoutes);
@@ -58,9 +58,19 @@ app.use('/api/chequeo', chequeoRoutes);
 app.use('/api/notificaciones', notificacionesRoutes);
 
 
+app.get('/bicicleta', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/bicicleta.html'));
+});
+
+app.get('/moto', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/moto.html'));
+});
+
+
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
+
 
 
 app.listen(PORT, async () => {
@@ -72,6 +82,7 @@ app.listen(PORT, async () => {
     console.log(`   🔧 Chequeo: http://localhost:${PORT}/api/chequeo`);
     console.log(`   🔔 Notificaciones: http://localhost:${PORT}/api/notificaciones`);
     console.log(`   Presiona Ctrl+C para detener`);
-    await testConnection();});
+    await testConnection();
+});
 
 module.exports = app;
