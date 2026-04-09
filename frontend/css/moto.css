@@ -589,3 +589,7 @@ body {
         height: 520px;
     }
 }
+.card .calculadora-container {
+    max-height: 400px;
+    overflow-y: auto;
+}
