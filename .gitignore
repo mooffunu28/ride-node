@@ -10,3 +10,7 @@ Thumbs.db
 .env 
 .DS_Store 
 *.log 
+node_modules/ 
+.env 
+.DS_Store 
+*.log 
