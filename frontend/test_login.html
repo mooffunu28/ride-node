@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R.I.D.E. - Registro y Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a3a3a 0%, #0f2b2d 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .card h2 {
+            color: #1a3a3a;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+        
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #2c7a5e;
+            color: white;
+            border: none;
+            border-radius: 40px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #1a5a45;
+        }
+        
+        .resultado {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f0f4f8;
+            border-radius: 12px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        .success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-left: 4px solid #2e7d32;
+        }
+        
+        .error {
+            background: #fee;
+            color: #c00;
+            border-left: 4px solid #c00;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-top: 1rem;
+            color: white;
+            text-decoration: none;
+        }
+        
+        hr {
+            margin: 1rem 0;
+            border: none;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-link">← Volver al inicio</a>
+        
+        <!-- Tarjeta de Registro -->
+        <div class="card">
+            <h2>📝 Registro de Usuario</h2>
+            <input type="text" id="reg_nombre" placeholder="Nombre completo" autocomplete="off">
+            <input type="email" id="reg_correo" placeholder="Correo electrónico" autocomplete="off">
+            <input type="password" id="reg_password" placeholder="Contraseña">
+            <input type="number" id="reg_edad" placeholder="Edad">
+            <select id="reg_tipo">
+                <option value="Moto">🏍️ Moto</option>
+                <option value="Cicla">🚲 Bicicleta</option>
+            </select>
+            <button onclick="registrar()">Registrar Usuario</button>
+            <div id="resultado_registro" class="resultado"></div>
+        </div>
+        
+        <!-- Tarjeta de Login -->
+        <div class="card">
+            <h2>🔐 Iniciar Sesión</h2>
+            <input type="email" id="login_correo" placeholder="Correo electrónico" autocomplete="off">
+            <input type="password" id="login_password" placeholder="Contraseña">
+            <button onclick="login()">Iniciar Sesión</button>
+            <div id="resultado_login" class="resultado"></div>
+        </div>
+    </div>
+
+    <script>
+        async function registrar() {
+            const nombre = document.getElementById('reg_nombre').value;
+            const correo = document.getElementById('reg_correo').value;
+            const password = document.getElementById('reg_password').value;
+            const edad = document.getElementById('reg_edad').value;
+            const tipo_vehiculo = document.getElementById('reg_tipo').value;
+            
+            const divResultado = document.getElementById('resultado_registro');
+            
+            if (!nombre || !correo || !password || !edad) {
+                divResultado.innerHTML = '<div class="error">❌ Todos los campos son obligatorios</div>';
+                return;
+            }
+            
+            divResultado.innerHTML = '<div>Cargando...</div>';
+            
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        nombre: nombre,
+                        correo: correo,
+                        password: password,
+                        edad: parseInt(edad),
+                        tipo_vehiculo: tipo_vehiculo
+                    })
+                });
+                
+                const resultado = await response.json();
+                
+                if (resultado.success) {
+                    divResultado.innerHTML = `
+                        <div class="success">
+                            ✅ ${resultado.message}<br>
+                            📝 ID de usuario: ${resultado.id_usuario}
+                        </div>
+                    `;
+                    // Limpiar campos de registro
+                    document.getElementById('reg_nombre').value = '';
+                    document.getElementById('reg_correo').value = '';
+                    document.getElementById('reg_password').value = '';
+                    document.getElementById('reg_edad').value = '';
+                } else {
+                    divResultado.innerHTML = `<div class="error">❌ Error: ${resultado.error}</div>`;
+                }
+            } catch (error) {
+                divResultado.innerHTML = `<div class="error">❌ Error de conexión: ${error.message}</div>`;
+            }
+        }
+        
+        async function login() {
+            const correo = document.getElementById('login_correo').value;
+            const password = document.getElementById('login_password').value;
+            
+            const divResultado = document.getElementById('resultado_login');
+            
+            if (!correo || !password) {
+                divResultado.innerHTML = '<div class="error">❌ Correo y contraseña son obligatorios</div>';
+                return;
+            }
+            
+            divResultado.innerHTML = '<div>Cargando...</div>';
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        correo: correo,
+                        password: password
+                    })
+                });
+                
+                const resultado = await response.json();
+                
+                if (resultado.success) {
+                    // Guardar token en localStorage
+                    localStorage.setItem('ride_token', resultado.token);
+                    localStorage.setItem('ride_usuario', JSON.stringify(resultado.user));
+                    
+                    divResultado.innerHTML = `
+                        <div class="success">
+                            ✅ ¡Bienvenido ${resultado.user.nombre}!<br>
+                            📧 Correo: ${resultado.user.correo}<br>
+                            🚲 Tipo: ${resultado.user.tipo_vehiculo}<br>
+                            🔑 Token: ${resultado.token.substring(0, 50)}...
+                        </div>
+                    `;
+                    
+                    // Limpiar campos de login
+                    document.getElementById('login_correo').value = '';
+                    document.getElementById('login_password').value = '';
+                    
+                    // Opcional: redirigir después de 2 segundos
+                    setTimeout(() => {
+                        if (resultado.user.tipo_vehiculo === 'Moto') {
+                            window.location.href = '/moto';
+                        } else {
+                            window.location.href = '/bicicleta';
+                        }
+                    }, 2000);
+                } else {
+                    divResultado.innerHTML = `<div class="error">❌ Error: ${resultado.error}</div>`;
+                }
+            } catch (error) {
+                divResultado.innerHTML = `<div class="error">❌ Error de conexión: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

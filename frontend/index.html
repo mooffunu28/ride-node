@@ -2,143 +2,151 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>R.I.D.E. - Seguridad Vial Inteligente</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-    <div class="bg-grid"></div>
-    
-    <nav class="navbar">
-        <div class="container nav-container">
-            <div class="logo">
-                <div class="logo-icon">
-                    <i class="fas fa-shield-alt"></i>
+    <!-- Fondo con efecto de movimiento -->
+    <div class="bg-animation">
+        <div class="bg-shape shape-1"></div>
+        <div class="bg-shape shape-2"></div>
+        <div class="bg-shape shape-3"></div>
+    </div>
+
+    <div class="auth-wrapper">
+        <div class="auth-container">
+            <!-- Logo y branding (visible siempre) -->
+            <div class="auth-brand">
+                <div class="brand-icon">
+                    <i class="fas fa-shield-haltered"></i>
                 </div>
-                <div class="logo-text">R.I.D.E <span>| Road Intelligence</span></div>
+                <h1 class="brand-title">R.I.D.E</h1>
+                <p class="brand-subtitle">Road Information & Digital Enforcement</p>
             </div>
-            <div class="nav-links">
-                <a href="/" data-i18n="nav_inicio">Inicio</a>
-                <a href="#" id="btnRegistro" data-i18n="nav_registrarse">Registrarse</a>
-                <a href="#" id="btnIdioma" class="btn-outline-nav">
-                    <i class="fas fa-globe"></i> EN
-                </a>
-            </div>
-        </div>
-    </nav>
 
-    <section class="hero">
-        <div class="container">
-            <div class="badge" data-i18n="badge">
-                <i class="fas fa-road"></i> Conducción consciente
-            </div>
-            <h1 data-i18n="titulo">Tu seguridad, <br>nuestra prioridad</h1>
-            <p class="subtitle" data-i18n="subtitulo">
-                Información clara, chequeos técnicos y normas adaptadas para cada tipo de vehículo.
-            </p>
-        </div>
-    </section>
-
-    <section class="options">
-        <div class="container">
-            <div class="options-grid">
-                <div class="option-card" data-vehiculo="bicicleta">
-                    <div class="card-icon bike-icon">
-                        <i class="fas fa-bicycle"></i>
+            <!-- SECCIÓN LOGIN/REGISTRO (se oculta después del login) -->
+            <div id="authSection">
+                <div class="auth-card">
+                    <!-- Tabs -->
+                    <div class="auth-tabs">
+                        <button class="tab-btn active" id="tabLoginBtn" onclick="mostrarLogin()">
+                            <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                        </button>
+                        <button class="tab-btn" id="tabRegisterBtn" onclick="mostrarRegistro()">
+                            <i class="fas fa-user-plus"></i> Registrarse
+                        </button>
                     </div>
-                    <h3 data-i18n="bicicleta_titulo">Bicicleta</h3>
-                    <p data-i18n="bicicleta_desc">Consejos de movilidad segura, normas para ciclistas, checklist de luces, frenos y más.</p>
-                    <button class="start-button">
-                        <span data-i18n="explorar">Explorar</span> <i class="fas fa-arrow-right"></i>
-                    </button>
-                </div>
 
-                <div class="option-card" data-vehiculo="moto">
-                    <div class="card-icon moto-icon">
-                        <i class="fas fa-motorcycle"></i>
+                    <!-- Formulario Login -->
+                    <div id="loginForm" class="auth-form">
+                        <div class="form-group">
+                            <label><i class="fas fa-envelope"></i> Correo electrónico</label>
+                            <input type="email" id="login_correo" placeholder="usuario@ejemplo.com">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-lock"></i> Contraseña</label>
+                            <input type="password" id="login_password" placeholder="********">
+                        </div>
+                        <button class="btn-submit" onclick="login()">
+                            <span>Iniciar Sesión</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
                     </div>
-                    <h3 data-i18n="moto_titulo">Moto</h3>
-                    <p data-i18n="moto_desc">Normas de tránsito específicas, multas, mantenimiento preventivo y equipo obligatorio.</p>
-                    <button class="start-button">
-                        <span data-i18n="explorar">Explorar</span> <i class="fas fa-arrow-right"></i>
-                    </button>
+
+                    <!-- Formulario Registro -->
+                    <div id="registerForm" class="auth-form hidden">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label><i class="fas fa-user"></i> Nombre completo</label>
+                                <input type="text" id="reg_nombre" placeholder="Juan Pérez">
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-envelope"></i> Correo electrónico</label>
+                                <input type="email" id="reg_correo" placeholder="usuario@ejemplo.com">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label><i class="fas fa-lock"></i> Contraseña</label>
+                                <input type="password" id="reg_password" placeholder="********">
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-calendar-alt"></i> Edad</label>
+                                <input type="number" id="reg_edad" placeholder="25">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-motorcycle"></i> Tipo de vehículo</label>
+                            <div class="vehicle-selector">
+                                <label class="vehicle-option">
+                                    <input type="radio" name="tipo_vehiculo" value="Moto" checked>
+                                    <div class="vehicle-option-content">
+                                        <i class="fas fa-motorcycle"></i>
+                                        <span>Moto</span>
+                                    </div>
+                                </label>
+                                <label class="vehicle-option">
+                                    <input type="radio" name="tipo_vehiculo" value="Cicla">
+                                    <div class="vehicle-option-content">
+                                        <i class="fas fa-bicycle"></i>
+                                        <span>Bicicleta</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        <button class="btn-submit" onclick="registrar()">
+                            <span>Crear cuenta</span>
+                            <i class="fas fa-user-plus"></i>
+                        </button>
+                    </div>
+
+                    <div class="auth-footer">
+                        <p><i class="fas fa-shield-alt"></i> Tus datos están seguros con nosotros</p>
+                    </div>
                 </div>
             </div>
-        </div>
-    </section>
 
-    <section class="features">
-        <div class="container">
-            <div class="features-grid">
-                <div class="feature-card">
-                    <i class="fas fa-clipboard-list"></i>
-                    <h4 data-i18n="chequeo_titulo">Chequeo Rápido</h4>
-                    <p data-i18n="chequeo_desc">Frenos, luces, casco: diagnóstico en segundos</p>
+            <!-- SECCIÓN DASHBOARD (se muestra después del login) -->
+            <div id="dashboardSection" class="dashboard-container hidden">
+                <button class="logout-btn" onclick="cerrarSesion()">
+                    <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+                </button>
+                
+                <div class="welcome-card">
+                    <h1 id="welcomeTitle">🚦 ¡Bienvenido!</h1>
+                    <p id="userEmail" class="user-email"></p>
+                    <p id="vehiculoMensaje" style="margin-top: 10px; font-size: 0.9rem;"></p>
+                    <p>Accede a tu chequeo de seguridad personalizado</p>
                 </div>
-                <div class="feature-card">
-                    <i class="fas fa-gavel"></i>
-                    <h4 data-i18n="multas_titulo">Evita Multas</h4>
-                    <p data-i18n="multas_desc">Infórmate sobre el código de tránsito actualizado</p>
-                </div>
-                <div class="feature-card">
-                    <i class="fas fa-hand-holding-heart"></i>
-                    <h4 data-i18n="cultura_titulo">Cultura Vial</h4>
-                    <p data-i18n="cultura_desc">Comparte la vía con respeto y reduce accidentes</p>
-                </div>
-                <div class="feature-card">
-                    <i class="fas fa-chart-line"></i>
-                    <h4 data-i18n="riesgo_titulo">Calculadora de Riesgo</h4>
-                    <p data-i18n="riesgo_desc">Evalúa tu nivel de riesgo antes de salir</p>
+                
+                <div class="vehicles-grid">
+                    <!-- Tarjeta Bicicleta -->
+                    <div id="bikeCard" class="vehicle-card" onclick="seleccionarVehiculo('bicicleta')">
+                        <div class="card-icon bike-icon">
+                            <i class="fas fa-bicycle"></i>
+                        </div>
+                        <h3>🚲 Bicicleta</h3>
+                        <p>Chequeo preventivo, normas de tránsito y calculadora de riesgo</p>
+                        <button class="select-btn">Acceder <i class="fas fa-arrow-right"></i></button>
+                    </div>
+                    
+                    <!-- Tarjeta Moto -->
+                    <div id="motoCard" class="vehicle-card" onclick="seleccionarVehiculo('moto')">
+                        <div class="card-icon moto-icon">
+                            <i class="fas fa-motorcycle"></i>
+                        </div>
+                        <h3>🏍️ Moto</h3>
+                        <p>Chequeo preventivo, normas de tránsito y calculadora de riesgo</p>
+                        <button class="select-btn">Acceder <i class="fas fa-arrow-right"></i></button>
+                    </div>
                 </div>
             </div>
-        </div>
-    </section>
-
-    <div id="modalRegistro" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2 data-i18n="registro_titulo"><i class="fas fa-user-plus"></i> Regístrate en R.I.D.E.</h2>
-            <form id="formRegistro">
-                <div class="form-group">
-                    <label data-i18n="nombre_label">Nombre completo *</label>
-                    <input type="text" id="regNombre" required>
-                </div>
-                <div class="form-group">
-                    <label data-i18n="email_label">Correo electrónico *</label>
-                    <input type="email" id="regCorreo" required>
-                </div>
-                <div class="form-group">
-                    <label data-i18n="edad_label">Edad *</label>
-                    <input type="number" id="regEdad" min="16" max="99" required>
-                </div>
-                <div class="form-group">
-                    <label data-i18n="vehiculo_label">Tipo de vehículo *</label>
-                    <select id="regTipoVehiculo" required>
-                        <option value="Moto">🏍️ Moto</option>
-                        <option value="Cicla">🚲 Bicicleta</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label data-i18n="cilindraje_label">Cilindraje (solo para moto)</label>
-                    <input type="number" id="regCilindraje" placeholder="Ej: 150">
-                </div>
-                <div class="form-group">
-                    <label data-i18n="mensaje_label">Mensaje motivador personalizado</label>
-                    <input type="text" id="regMensaje" placeholder="Ej: ¡Llega sano a casa!">
-                </div>
-                <button type="submit" class="btn-submit" data-i18n="btn_registrar">Registrarse</button>
-            </form>
         </div>
     </div>
 
-    <footer>
-        <div class="container">
-            <p data-i18n="footer">R.I.D.E — Road Information & Digital Enforcement · Seguridad vial para todos · SENA CBA 2026</p>
-        </div>
-    </footer>
-
-    <script src="/js/app.js"></script>
+    <script src="/js/auth.js"></script>
 </body>
 </html>
