@@ -2,17 +2,17 @@
     <h2><i class="fas fa-calculator"></i> <span id="tituloRiesgo">⚠️ Evaluación de Riesgo del Viaje</span></h2>
     <div class="calculadora-container">
         <div class="form-row">
-            <div class="form-group" style="flex:1">
-                <label>Velocidad máxima planeada (km/h)</label>
+            <div class="form-group">
+                <label id="labelVelocidad">Velocidad máxima planeada (km/h)</label>
                 <input type="number" id="velocidad" class="form-control" placeholder="Velocidad máxima">
             </div>
-            <div class="form-group" style="flex:1">
-                <label>Distancia del recorrido (km)</label>
+            <div class="form-group">
+                <label id="labelDistancia">Distancia del recorrido (km)</label>
                 <input type="number" id="distancia" class="form-control" placeholder="Distancia">
             </div>
         </div>
         <div class="form-group">
-            <label>Condiciones climáticas</label>
+            <label id="labelClima">Condiciones climáticas</label>
             <select id="clima" class="form-control">
                 <option value="dia">☀️ Día soleado</option>
                 <option value="lluvia">🌧️ Lluvia</option>
@@ -21,7 +21,7 @@
             </select>
         </div>
         <div class="form-group">
-            <label>Tipo de vía</label>
+            <label id="labelTipoVia">Tipo de vía</label>
             <select id="tipo_via" class="form-control">
                 <option value="urbana">🏙️ Urbana (máx 60 km/h)</option>
                 <option value="rural">🌄 Rural (máx 80 km/h)</option>
