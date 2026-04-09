@@ -20,6 +20,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Archivos estáticos
 app.use(express.static(path.join(__dirname, '../frontend')));
+// Rutas específicas para CSS y JS
+app.use('/css', express.static(path.join(__dirname, '../frontend/css')));
+app.use('/js', express.static(path.join(__dirname, '../frontend/js')));
 
 // Rutas API
 app.use('/api/normas', normasRoutes);
