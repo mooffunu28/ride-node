@@ -1,4 +1,4 @@
-// ==================== VERSIÓN CON AUTO-REFRESCO FUNCIONAL ====================
+// ==================== VERSIÓN CON SINCRONIZACIÓN ====================
 console.log('✅ moto.js cargado');
 
 const textos = {
@@ -95,6 +95,7 @@ async function cargarChequeo() {
         const res = await fetch(`/api/chequeo?tipo=Moto&idioma=${idiomaActual}`);
         const data = await res.json();
         if (data.data && data.data.length > 0) {
+            // Mostrar checklist preventivo
             container.innerHTML = data.data.map(c => `
                 <div class="checklist-item">
                     <input type="checkbox" class="check-componente" data-nombre="${c.nom_comp}">
@@ -106,15 +107,38 @@ async function cargarChequeo() {
                 </div>
             `).join('');
             
-            if (checkContainer) {
-                checkContainer.innerHTML = data.data.map(c => `
-                    <label class="checkbox-label">
-                        <input type="checkbox" class="check-riesgo" data-nombre="${c.nom_comp}">
-                        ${c.nom_comp} ${textos[idiomaActual].buen_estado}
-                    </label>
-                `).join('');
-            }
-            // Configurar auto-refresco después de cargar los checkboxes
+            // Generar checkboxes para la calculadora de riesgo
+            checkContainer.innerHTML = data.data.map(c => `
+                <label class="checkbox-label">
+                    <input type="checkbox" class="check-riesgo" data-nombre="${c.nom_comp}">
+                    ${c.nom_comp} ${textos[idiomaActual].buen_estado}
+                </label>
+            `).join('');
+            
+            // ==================== SINCRONIZACIÓN: Chequeo Preventivo -> Calculadora ====================
+            document.querySelectorAll('.check-componente').forEach(cb => {
+                cb.addEventListener('change', function() {
+                    const nombre = this.getAttribute('data-nombre');
+                    const checkboxRiesgo = document.querySelector(`.check-riesgo[data-nombre="${nombre}"]`);
+                    if (checkboxRiesgo) {
+                        checkboxRiesgo.checked = this.checked;
+                        checkboxRiesgo.dispatchEvent(new Event('change'));
+                    }
+                });
+            });
+            
+            // ==================== SINCRONIZACIÓN: Calculadora -> Chequeo Preventivo ====================
+            document.querySelectorAll('.check-riesgo').forEach(cb => {
+                cb.addEventListener('change', function() {
+                    const nombre = this.getAttribute('data-nombre');
+                    const checkboxPreventivo = document.querySelector(`.check-componente[data-nombre="${nombre}"]`);
+                    if (checkboxPreventivo) {
+                        checkboxPreventivo.checked = this.checked;
+                    }
+                });
+            });
+            
+            // Configurar auto-refresco
             setTimeout(() => configurarAutoUpdate(), 100);
             evaluarRiesgoViaje();
         }
@@ -169,7 +193,6 @@ function configurarAutoUpdate() {
         timeoutAutoUpdate = setTimeout(() => evaluarRiesgoViaje(), 400);
     }
     
-    // Configurar inputs
     ['velocidad', 'distancia', 'clima', 'tipo_via'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -180,14 +203,11 @@ function configurarAutoUpdate() {
         }
     });
     
-    // Configurar checkboxes de riesgo
     const checkboxes = document.querySelectorAll('.check-riesgo');
     checkboxes.forEach(cb => {
         cb.removeEventListener('change', triggerAutoUpdate);
         cb.addEventListener('change', triggerAutoUpdate);
     });
-    
-    console.log(`✅ Auto-refresco configurado: ${checkboxes.length} checkboxes, 4 inputs`);
 }
 
 // Eventos
