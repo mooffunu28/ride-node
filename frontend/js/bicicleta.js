@@ -1,57 +1,19 @@
-// ==================== VERSIÓN CON SINCRONIZACIÓN PARA BICICLETA ====================
+// ==================== VERSIÓN CORREGIDA CON SINCRONIZACIÓN Y AUTO-REFRESCO ====================
 console.log('✅ bicicleta.js cargado');
 
 const textos = {
-    es: { prioridad: "Prioridad", buen_estado: "en buen estado", cargando: "Cargando...", evaluando: "Evaluando riesgo...", velocidad: "Velocidad máxima (km/h)", distancia: "Distancia (km)", clima: "Condiciones climáticas", tipo_via: "Tipo de vía" },
-    en: { prioridad: "Priority", buen_estado: "in good condition", cargando: "Loading...", evaluando: "Assessing risk...", velocidad: "Max speed (km/h)", distancia: "Distance (km)", clima: "Weather conditions", tipo_via: "Road type" }
+    es: { prioridad: "Prioridad", buen_estado: "en buen estado", cargando: "Cargando...", evaluando: "Evaluando riesgo..." },
+    en: { prioridad: "Priority", buen_estado: "in good condition", cargando: "Loading...", evaluando: "Assessing risk..." }
 };
 
 let idiomaActual = localStorage.getItem('ride_idioma') || 'es';
 let timeoutAutoUpdate = null;
 
 function aplicarTextos() {
-    const t = textos[idiomaActual];
     const btnIdioma = document.getElementById('btnIdioma');
     if (btnIdioma) btnIdioma.innerHTML = idiomaActual === 'es' ? '🌐 English' : '🌐 Español';
     const btnCalcular = document.getElementById('btnCalcularTexto');
     if (btnCalcular) btnCalcular.innerHTML = idiomaActual === 'es' ? 'Evaluar Riesgo' : 'Assess Risk';
-    
-    const labelVelocidad = document.getElementById('labelVelocidad');
-    if (labelVelocidad) labelVelocidad.innerHTML = t.velocidad;
-    const labelDistancia = document.getElementById('labelDistancia');
-    if (labelDistancia) labelDistancia.innerHTML = t.distancia;
-    const labelClima = document.getElementById('labelClima');
-    if (labelClima) labelClima.innerHTML = t.clima;
-    const labelTipoVia = document.getElementById('labelTipoVia');
-    if (labelTipoVia) labelTipoVia.innerHTML = t.tipo_via;
-    
-    const climaSelect = document.getElementById('clima');
-    if (climaSelect) {
-        if (idiomaActual === 'es') {
-            climaSelect.options[0].text = '☀️ Día soleado';
-            climaSelect.options[1].text = '🌧️ Lluvia';
-            climaSelect.options[2].text = '🌙 Noche';
-            climaSelect.options[3].text = '🌫️ Niebla';
-        } else {
-            climaSelect.options[0].text = '☀️ Sunny day';
-            climaSelect.options[1].text = '🌧️ Rain';
-            climaSelect.options[2].text = '🌙 Night';
-            climaSelect.options[3].text = '🌫️ Fog';
-        }
-    }
-    
-    const viaSelect = document.getElementById('tipo_via');
-    if (viaSelect) {
-        if (idiomaActual === 'es') {
-            viaSelect.options[0].text = '🏙️ Urbana (máx 25 km/h)';
-            viaSelect.options[1].text = '🌄 Rural (máx 30 km/h)';
-            viaSelect.options[2].text = '🛣️ Carretera (NO RECOMENDADO)';
-        } else {
-            viaSelect.options[0].text = '🏙️ Urban (max 25 km/h)';
-            viaSelect.options[1].text = '🌄 Rural (max 30 km/h)';
-            viaSelect.options[2].text = '🛣️ Highway (NOT RECOMMENDED)';
-        }
-    }
 }
 
 function cambiarIdioma() {
@@ -115,31 +77,40 @@ async function cargarChequeo() {
                 </label>
             `).join('');
             
-            // ==================== SINCRONIZACIÓN: Chequeo Preventivo -> Calculadora ====================
-            document.querySelectorAll('.check-componente').forEach(cb => {
-                cb.addEventListener('change', function() {
-                    const nombre = this.getAttribute('data-nombre');
-                    const checkboxRiesgo = document.querySelector(`.check-riesgo[data-nombre="${nombre}"]`);
-                    if (checkboxRiesgo) {
-                        checkboxRiesgo.checked = this.checked;
-                        checkboxRiesgo.dispatchEvent(new Event('change'));
-                    }
+            // ==================== SINCRONIZACIÓN ====================
+            function sincronizarCheckboxes() {
+                document.querySelectorAll('.check-componente').forEach(cb => {
+                    cb.removeEventListener('change', sincronizarDePreventivoARiesgo);
+                    cb.addEventListener('change', sincronizarDePreventivoARiesgo);
                 });
-            });
+                
+                document.querySelectorAll('.check-riesgo').forEach(cb => {
+                    cb.removeEventListener('change', sincronizarDeRiesgoAPreventivo);
+                    cb.addEventListener('change', sincronizarDeRiesgoAPreventivo);
+                });
+            }
             
-            // ==================== SINCRONIZACIÓN: Calculadora -> Chequeo Preventivo ====================
-            document.querySelectorAll('.check-riesgo').forEach(cb => {
-                cb.addEventListener('change', function() {
-                    const nombre = this.getAttribute('data-nombre');
-                    const checkboxPreventivo = document.querySelector(`.check-componente[data-nombre="${nombre}"]`);
-                    if (checkboxPreventivo) {
-                        checkboxPreventivo.checked = this.checked;
-                    }
-                });
-            });
+            function sincronizarDePreventivoARiesgo() {
+                const nombre = this.getAttribute('data-nombre');
+                const checkboxRiesgo = document.querySelector(`.check-riesgo[data-nombre="${nombre}"]`);
+                if (checkboxRiesgo && checkboxRiesgo.checked !== this.checked) {
+                    checkboxRiesgo.checked = this.checked;
+                    checkboxRiesgo.dispatchEvent(new Event('change'));
+                }
+            }
+            
+            function sincronizarDeRiesgoAPreventivo() {
+                const nombre = this.getAttribute('data-nombre');
+                const checkboxPreventivo = document.querySelector(`.check-componente[data-nombre="${nombre}"]`);
+                if (checkboxPreventivo && checkboxPreventivo.checked !== this.checked) {
+                    checkboxPreventivo.checked = this.checked;
+                }
+            }
+            
+            sincronizarCheckboxes();
             
             // Configurar auto-refresco
-            setTimeout(() => configurarAutoUpdate(), 100);
+            configurarAutoUpdate();
             evaluarRiesgoViaje();
         }
     } catch(e) { container.innerHTML = '<div class="error-message">Error</div>'; }
@@ -193,6 +164,7 @@ function configurarAutoUpdate() {
         timeoutAutoUpdate = setTimeout(() => evaluarRiesgoViaje(), 400);
     }
     
+    // Inputs
     ['velocidad', 'distancia', 'clima', 'tipo_via'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -203,11 +175,14 @@ function configurarAutoUpdate() {
         }
     });
     
+    // Checkboxes de riesgo
     const checkboxes = document.querySelectorAll('.check-riesgo');
     checkboxes.forEach(cb => {
         cb.removeEventListener('change', triggerAutoUpdate);
         cb.addEventListener('change', triggerAutoUpdate);
     });
+    
+    console.log('✅ Auto-refresco configurado');
 }
 
 // Eventos
