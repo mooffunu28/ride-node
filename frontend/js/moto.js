@@ -23,11 +23,6 @@ const textos = {
         cargando: "Cargando...",
         multa: "Multa tipo",
         articulo: "Artículo",
-        seguridad_activa: "🛑 Seguridad Activa (Frenos y Luces)",
-        seguridad_pasiva: "🧤 Seguridad Pasiva (Equipo)",
-        motor_transmision: "⚙️ Motor y Transmisión",
-        suspension_neumaticos: "🛞 Suspensión y Neumáticos",
-        sistema_electrico: "🔋 Sistema Eléctrico",
         evaluando: "Evaluando riesgos..."
     },
     en: {
@@ -53,11 +48,6 @@ const textos = {
         cargando: "Loading...",
         multa: "Fine type",
         articulo: "Article",
-        seguridad_activa: "🛑 Active Safety (Brakes & Lights)",
-        seguridad_pasiva: "🧤 Passive Safety (Gear)",
-        motor_transmision: "⚙️ Engine & Transmission",
-        suspension_neumaticos: "🛞 Suspension & Tyres",
-        sistema_electrico: "🔋 Electrical System",
         evaluando: "Assessing risks..."
     }
 };
@@ -65,7 +55,6 @@ const textos = {
 let idiomaActual = localStorage.getItem('ride_idioma') || 'es';
 let timeoutAutoUpdate = null;
 
-// ==================== APLICAR TEXTOS ====================
 function aplicarTextos() {
     const t = textos[idiomaActual];
     document.getElementById('titulo').innerHTML = t.titulo;
@@ -103,7 +92,6 @@ function aplicarTextos() {
     }
 }
 
-// ==================== CAMBIAR IDIOMA ====================
 function cambiarIdioma() {
     idiomaActual = idiomaActual === 'es' ? 'en' : 'es';
     localStorage.setItem('ride_idioma', idiomaActual);
@@ -112,7 +100,6 @@ function cambiarIdioma() {
     cargarChequeo();
 }
 
-// ==================== CARGAR NORMAS ====================
 async function cargarNormas() {
     const container = document.getElementById('normas-container');
     const t = textos[idiomaActual];
@@ -139,13 +126,14 @@ async function cargarNormas() {
                     </div>
                 `;
             }).join('');
+        } else {
+            container.innerHTML = '<div class="error-message">⚠️ No hay normas cargadas</div>';
         }
     } catch (error) {
         container.innerHTML = `<div class="error-message">❌ Error: ${error.message}</div>`;
     }
 }
 
-// ==================== EVALUAR RIESGO ====================
 async function evaluarRiesgoViaje() {
     const velocidad = parseInt(document.getElementById('velocidad').value) || 0;
     const distancia = parseInt(document.getElementById('distancia').value) || 0;
@@ -165,7 +153,7 @@ async function evaluarRiesgoViaje() {
         const response = await fetch('/api/riesgo/calcular', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ velocidad, distancia, clima, tipoVia, chequeo, idioma: idiomaActual })
+            body: JSON.stringify({ velocidad, distancia, clima, tipoVia, chequeo, tipo_vehiculo: 'Moto', idioma: idiomaActual })
         });
         const resultado = await response.json();
         
@@ -196,7 +184,6 @@ async function evaluarRiesgoViaje() {
     }
 }
 
-// ==================== AUTO-REFRESCO ====================
 function configurarAutoUpdate() {
     function triggerAutoUpdate() {
         if (timeoutAutoUpdate) clearTimeout(timeoutAutoUpdate);
@@ -220,10 +207,10 @@ function configurarAutoUpdate() {
             cb.addEventListener('change', triggerAutoUpdate);
         });
     });
-    observer.observe(document.getElementById('componentes-check'), { childList: true, subtree: true });
+    const checkContainer = document.getElementById('componentes-check');
+    if (checkContainer) observer.observe(checkContainer, { childList: true, subtree: true });
 }
 
-// ==================== CARGAR CHEQUEO ====================
 async function cargarChequeo() {
     const container = document.getElementById('chequeo-container');
     const checkContainer = document.getElementById('componentes-check');
@@ -236,32 +223,20 @@ async function cargarChequeo() {
         const data = result.data || [];
         
         if (data.length > 0) {
-            const grupos = {
-                seguridad_activa: data.filter(c => c.categoria === 'seguridad_activa'),
-                seguridad_pasiva: data.filter(c => c.categoria === 'seguridad_pasiva'),
-                motor_transmision: data.filter(c => c.categoria === 'motor_transmision'),
-                suspension_neumaticos: data.filter(c => c.categoria === 'suspension_neumaticos'),
-                sistema_electrico: data.filter(c => c.categoria === 'sistema_electrico')
-            };
-            
-            container.innerHTML = Object.entries(grupos).map(([key, items]) => `
-                <div class="checklist-group">
-                    <h3 class="group-title">${t[key] || key}</h3>
-                    ${items.map(c => `
-                        <div class="checklist-item">
-                            <input type="checkbox" class="check-componente" data-nombre="${c.nom_comp}">
-                            <div style="flex:1">
-                                <strong>${c.nom_comp}</strong><br>
-                                <small>${c.estado_opt}</small><br>
-                                <span class="priority-${c.prioridad === 'Alta' ? 'high' : 'medium'}">${t.prioridad}: ${c.prioridad}</span>
-                            </div>
-                        </div>
-                    `).join('')}
+            container.innerHTML = data.map(c => `
+                <div class="checklist-item">
+                    <input type="checkbox" class="check-componente" data-nombre="${c.nom_comp}">
+                    <div style="flex:1">
+                        <strong>${c.nom_comp}</strong><br>
+                        <small style="color:#6b8a8a;">${c.estado_opt}</small><br>
+                        <span class="${c.prioridad === 'Alta' ? 'priority-high' : 'priority-medium'}">
+                            ${t.prioridad}: ${c.prioridad}
+                        </span>
+                    </div>
                 </div>
             `).join('');
             
-            const componentesParaCalculadora = data.filter(c => c.paraCalculadora !== false);
-            checkContainer.innerHTML = componentesParaCalculadora.map(c => `
+            checkContainer.innerHTML = data.map(c => `
                 <label class="checkbox-label">
                     <input type="checkbox" class="check-riesgo" data-nombre="${c.nom_comp}">
                     ${c.nom_comp} ${t.buen_estado}
@@ -270,13 +245,15 @@ async function cargarChequeo() {
             
             configurarAutoUpdate();
             evaluarRiesgoViaje();
+        } else {
+            container.innerHTML = '<div class="error-message">⚠️ No hay componentes registrados</div>';
         }
     } catch (error) {
+        console.error('Error cargando chequeo:', error);
         container.innerHTML = `<div class="error-message">❌ Error: ${error.message}</div>`;
     }
 }
 
-// ==================== INICIALIZAR ====================
 document.getElementById('btnIdioma')?.addEventListener('click', cambiarIdioma);
 aplicarTextos();
 cargarNormas();
