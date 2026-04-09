@@ -1,54 +1,24 @@
 // ==================== TEXTO TRADUCIDO ====================
 const textos = {
     es: {
-        titulo: "🏍️ Seguridad en Moto",
-        subtitulo: "Revisa tu estado, conoce las normas y calcula tu nivel de riesgo",
-        normas: "📋 Normas de Tránsito",
-        chequeo: "✅ Chequeo Preventivo (Antes de salir)",
-        riesgo: "⚠️ Evaluación de Riesgo del Viaje",
-        velocidad_maxima: "Velocidad máxima planeada (km/h)",
-        distancia: "Distancia del recorrido (km)",
-        clima: "Condiciones climáticas",
-        clima_dia: "☀️ Día soleado",
-        clima_lluvia: "🌧️ Lluvia",
-        clima_noche: "🌙 Noche",
-        clima_niebla: "🌫️ Niebla",
-        tipo_via: "Tipo de vía",
-        via_urbana: "🏙️ Urbana (máx 60 km/h)",
-        via_rural: "🌄 Rural (máx 80 km/h)",
-        via_carretera: "🛣️ Carretera (máx 100 km/h)",
-        evaluar: "Evaluar Riesgo del Viaje",
         prioridad: "Prioridad",
         buen_estado: "en buen estado",
         cargando: "Cargando...",
-        multa: "Multa tipo",
-        articulo: "Artículo",
-        evaluando: "Evaluando riesgos..."
+        evaluando: "Evaluando riesgos...",
+        velocidad: "Velocidad máxima (km/h)",
+        distancia: "Distancia (km)",
+        clima: "Clima",
+        tipo_via: "Tipo de vía"
     },
     en: {
-        titulo: "🏍️ Motorcycle Safety",
-        subtitulo: "Check your status, know the rules and calculate your risk level",
-        normas: "📋 Traffic Rules",
-        chequeo: "✅ Preventive Check (Before riding)",
-        riesgo: "⚠️ Trip Risk Assessment",
-        velocidad_maxima: "Maximum planned speed (km/h)",
-        distancia: "Trip distance (km)",
-        clima: "Weather conditions",
-        clima_dia: "☀️ Sunny day",
-        clima_lluvia: "🌧️ Rain",
-        clima_noche: "🌙 Night",
-        clima_niebla: "🌫️ Fog",
-        tipo_via: "Road type",
-        via_urbana: "🏙️ Urban (max 60 km/h)",
-        via_rural: "🌄 Rural (max 80 km/h)",
-        via_carretera: "🛣️ Highway (max 100 km/h)",
-        evaluar: "Assess Trip Risk",
         prioridad: "Priority",
         buen_estado: "in good condition",
         cargando: "Loading...",
-        multa: "Fine type",
-        articulo: "Article",
-        evaluando: "Assessing risks..."
+        evaluando: "Assessing risks...",
+        velocidad: "Max speed (km/h)",
+        distancia: "Distance (km)",
+        clima: "Weather",
+        tipo_via: "Road type"
     }
 };
 
@@ -56,39 +26,26 @@ let idiomaActual = localStorage.getItem('ride_idioma') || 'es';
 let timeoutAutoUpdate = null;
 
 function aplicarTextos() {
-    const t = textos[idiomaActual];
-    document.getElementById('titulo').innerHTML = t.titulo;
-    document.getElementById('subtitulo').innerHTML = t.subtitulo;
-    document.getElementById('tituloNormas').innerHTML = t.normas;
-    document.getElementById('tituloChequeo').innerHTML = t.chequeo;
-    document.getElementById('tituloRiesgo').innerHTML = t.riesgo;
-    document.getElementById('velocidad').placeholder = t.velocidad_maxima;
-    document.getElementById('distancia').placeholder = t.distancia;
-    document.getElementById('btnCalcularTexto').innerHTML = t.evaluar;
     document.getElementById('btnIdioma').innerHTML = idiomaActual === 'es' ? '🌐 English' : '🌐 Español';
-    
-    const labelVelocidad = document.getElementById('labelVelocidad');
-    const labelDistancia = document.getElementById('labelDistancia');
-    const labelClima = document.getElementById('labelClima');
-    const labelTipoVia = document.getElementById('labelTipoVia');
-    if (labelVelocidad) labelVelocidad.innerHTML = t.velocidad_maxima;
-    if (labelDistancia) labelDistancia.innerHTML = t.distancia;
-    if (labelClima) labelClima.innerHTML = t.clima;
-    if (labelTipoVia) labelTipoVia.innerHTML = t.tipo_via;
+    document.getElementById('btnCalcularTexto').innerHTML = idiomaActual === 'es' ? 'Evaluar Riesgo' : 'Assess Risk';
+    document.getElementById('labelVelocidad').innerHTML = textos[idiomaActual].velocidad;
+    document.getElementById('labelDistancia').innerHTML = textos[idiomaActual].distancia;
+    document.getElementById('labelClima').innerHTML = textos[idiomaActual].clima;
+    document.getElementById('labelTipoVia').innerHTML = textos[idiomaActual].tipo_via;
     
     const climaSelect = document.getElementById('clima');
     if (climaSelect) {
-        climaSelect.options[0].text = t.clima_dia;
-        climaSelect.options[1].text = t.clima_lluvia;
-        climaSelect.options[2].text = t.clima_noche;
-        climaSelect.options[3].text = t.clima_niebla;
+        climaSelect.options[0].text = idiomaActual === 'es' ? '☀️ Día soleado' : '☀️ Sunny day';
+        climaSelect.options[1].text = idiomaActual === 'es' ? '🌧️ Lluvia' : '🌧️ Rain';
+        climaSelect.options[2].text = idiomaActual === 'es' ? '🌙 Noche' : '🌙 Night';
+        climaSelect.options[3].text = idiomaActual === 'es' ? '🌫️ Niebla' : '🌫️ Fog';
     }
     
     const viaSelect = document.getElementById('tipo_via');
     if (viaSelect) {
-        viaSelect.options[0].text = t.via_urbana;
-        viaSelect.options[1].text = t.via_rural;
-        viaSelect.options[2].text = t.via_carretera;
+        viaSelect.options[0].text = idiomaActual === 'es' ? '🏙️ Urbana (máx 60 km/h)' : '🏙️ Urban (max 60 km/h)';
+        viaSelect.options[1].text = idiomaActual === 'es' ? '🌄 Rural (máx 80 km/h)' : '🌄 Rural (max 80 km/h)';
+        viaSelect.options[2].text = idiomaActual === 'es' ? '🛣️ Carretera (máx 100 km/h)' : '🛣️ Highway (max 100 km/h)';
     }
 }
 
@@ -102,38 +59,62 @@ function cambiarIdioma() {
 
 async function cargarNormas() {
     const container = document.getElementById('normas-container');
-    const t = textos[idiomaActual];
-    container.innerHTML = `<div class="loading">${t.cargando}</div>`;
-    
+    container.innerHTML = '<div class="loading">Cargando normas...</div>';
     try {
-        const response = await fetch(`/api/normas?tipo=moto&idioma=${idiomaActual}`);
-        const result = await response.json();
-        const data = result.data || [];
-        
-        if (data.length > 0) {
-            container.innerHTML = data.map(n => {
-                const multaClass = n.tipo_multa ? `multa-${n.tipo_multa}` : '';
-                return `
-                    <div class="norma-card">
-                        <div class="norma-check"><i class="fas fa-check"></i></div>
-                        <div class="norma-contenido">
-                            <div class="norma-header">
-                                <span class="norma-articulo">${t.articulo} ${n.art_num || 'N/A'}</span>
-                                ${n.tipo_multa ? `<span class="norma-multa ${multaClass}">💰 ${t.multa} ${n.tipo_multa}</span>` : ''}
-                            </div>
-                            <div class="norma-descripcion">${n.descripcion || 'Sin descripción'}</div>
+        const res = await fetch(`/api/normas?tipo=moto&idioma=${idiomaActual}`);
+        const data = await res.json();
+        if (data.data && data.data.length > 0) {
+            container.innerHTML = data.data.map(n => `
+                <div class="norma-card">
+                    <div class="norma-check"><i class="fas fa-check"></i></div>
+                    <div class="norma-contenido">
+                        <div class="norma-header">
+                            <span class="norma-articulo">${idiomaActual === 'es' ? 'Artículo' : 'Article'} ${n.art_num}</span>
+                            ${n.tipo_multa ? `<span class="norma-multa">💰 ${idiomaActual === 'es' ? 'Multa tipo' : 'Fine type'} ${n.tipo_multa}</span>` : ''}
                         </div>
+                        <div class="norma-descripcion">${n.descripcion}</div>
                     </div>
-                `;
-            }).join('');
-        } else {
-            container.innerHTML = '<div class="error-message">⚠️ No hay normas cargadas</div>';
+                </div>
+            `).join('');
         }
-    } catch (error) {
-        container.innerHTML = `<div class="error-message">❌ Error: ${error.message}</div>`;
-    }
+    } catch(e) { container.innerHTML = '<div class="error">Error cargando normas</div>'; }
 }
 
+async function cargarChequeo() {
+    const container = document.getElementById('chequeo-container');
+    const checkContainer = document.getElementById('componentes-check');
+    container.innerHTML = '<div class="loading">Cargando checklist...</div>';
+    try {
+        const res = await fetch(`/api/chequeo?tipo=Moto&idioma=${idiomaActual}`);
+        const data = await res.json();
+        if (data.data && data.data.length > 0) {
+            container.innerHTML = data.data.map(c => `
+                <div class="checklist-item">
+                    <input type="checkbox" class="check-componente" data-nombre="${c.nom_comp}">
+                    <div style="flex:1">
+                        <strong>${c.nom_comp}</strong><br>
+                        <small>${c.estado_opt}</small><br>
+                        <span class="${c.prioridad === 'Alta' ? 'priority-high' : 'priority-medium'}">
+                            ${textos[idiomaActual].prioridad}: ${c.prioridad}
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+            
+            checkContainer.innerHTML = data.data.map(c => `
+                <label class="checkbox-label">
+                    <input type="checkbox" class="check-riesgo" data-nombre="${c.nom_comp}">
+                    ${c.nom_comp} ${textos[idiomaActual].buen_estado}
+                </label>
+            `).join('');
+            
+            // Configurar auto-refresco después de cargar los checkboxes
+            configurarAutoUpdate();
+        }
+    } catch(e) { container.innerHTML = '<div class="error">Error cargando checklist</div>'; }
+}
+
+// ==================== EVALUAR RIESGO ====================
 async function evaluarRiesgoViaje() {
     const velocidad = parseInt(document.getElementById('velocidad').value) || 0;
     const distancia = parseInt(document.getElementById('distancia').value) || 0;
@@ -153,7 +134,15 @@ async function evaluarRiesgoViaje() {
         const response = await fetch('/api/riesgo/calcular', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ velocidad, distancia, clima, tipoVia, chequeo, tipo_vehiculo: 'Moto', idioma: idiomaActual })
+            body: JSON.stringify({ 
+                velocidad, 
+                distancia, 
+                clima, 
+                tipoVia, 
+                chequeo, 
+                tipo_vehiculo: 'Moto', 
+                idioma: idiomaActual 
+            })
         });
         const resultado = await response.json();
         
@@ -184,10 +173,11 @@ async function evaluarRiesgoViaje() {
     }
 }
 
+// ==================== AUTO-REFRESCO ====================
 function configurarAutoUpdate() {
     function triggerAutoUpdate() {
         if (timeoutAutoUpdate) clearTimeout(timeoutAutoUpdate);
-        timeoutAutoUpdate = setTimeout(() => evaluarRiesgoViaje(), 300);
+        timeoutAutoUpdate = setTimeout(() => evaluarRiesgoViaje(), 400);
     }
     
     const elementos = ['velocidad', 'distancia', 'clima', 'tipo_via'];
@@ -209,52 +199,16 @@ function configurarAutoUpdate() {
     });
     const checkContainer = document.getElementById('componentes-check');
     if (checkContainer) observer.observe(checkContainer, { childList: true, subtree: true });
-}
-
-async function cargarChequeo() {
-    const container = document.getElementById('chequeo-container');
-    const checkContainer = document.getElementById('componentes-check');
-    const t = textos[idiomaActual];
-    container.innerHTML = `<div class="loading">${t.cargando}</div>`;
     
-    try {
-        const response = await fetch(`/api/chequeo?tipo=Moto&idioma=${idiomaActual}`);
-        const result = await response.json();
-        const data = result.data || [];
-        
-        if (data.length > 0) {
-            container.innerHTML = data.map(c => `
-                <div class="checklist-item">
-                    <input type="checkbox" class="check-componente" data-nombre="${c.nom_comp}">
-                    <div style="flex:1">
-                        <strong>${c.nom_comp}</strong><br>
-                        <small style="color:#6b8a8a;">${c.estado_opt}</small><br>
-                        <span class="${c.prioridad === 'Alta' ? 'priority-high' : 'priority-medium'}">
-                            ${t.prioridad}: ${c.prioridad}
-                        </span>
-                    </div>
-                </div>
-            `).join('');
-            
-            checkContainer.innerHTML = data.map(c => `
-                <label class="checkbox-label">
-                    <input type="checkbox" class="check-riesgo" data-nombre="${c.nom_comp}">
-                    ${c.nom_comp} ${t.buen_estado}
-                </label>
-            `).join('');
-            
-            configurarAutoUpdate();
-            evaluarRiesgoViaje();
-        } else {
-            container.innerHTML = '<div class="error-message">⚠️ No hay componentes registrados</div>';
-        }
-    } catch (error) {
-        console.error('Error cargando chequeo:', error);
-        container.innerHTML = `<div class="error-message">❌ Error: ${error.message}</div>`;
-    }
+    // Llamar a evaluarRiesgoViaje una vez al inicio
+    setTimeout(() => evaluarRiesgoViaje(), 500);
 }
 
+// ==================== EVENTOS ====================
 document.getElementById('btnIdioma')?.addEventListener('click', cambiarIdioma);
+document.getElementById('calcularRiesgo')?.addEventListener('click', evaluarRiesgoViaje);
+
+// ==================== INICIALIZAR ====================
 aplicarTextos();
 cargarNormas();
 cargarChequeo();
