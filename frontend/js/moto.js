@@ -114,8 +114,8 @@ async function cargarChequeo() {
                     </label>
                 `).join('');
             }
-            // Configurar auto-refresco después de cargar todo
-            configurarAutoUpdate();
+            // Configurar auto-refresco después de cargar los checkboxes
+            setTimeout(() => configurarAutoUpdate(), 100);
             evaluarRiesgoViaje();
         }
     } catch(e) { container.innerHTML = '<div class="error-message">Error</div>'; }
@@ -181,19 +181,13 @@ function configurarAutoUpdate() {
     });
     
     // Configurar checkboxes de riesgo
-    function configurarCheckboxes() {
-        document.querySelectorAll('.check-riesgo').forEach(cb => {
-            cb.removeEventListener('change', triggerAutoUpdate);
-            cb.addEventListener('change', triggerAutoUpdate);
-        });
-    }
+    const checkboxes = document.querySelectorAll('.check-riesgo');
+    checkboxes.forEach(cb => {
+        cb.removeEventListener('change', triggerAutoUpdate);
+        cb.addEventListener('change', triggerAutoUpdate);
+    });
     
-    configurarCheckboxes();
-    
-    // Observer para nuevos checkboxes
-    const observer = new MutationObserver(() => configurarCheckboxes());
-    const checkContainer = document.getElementById('componentes-check');
-    if (checkContainer) observer.observe(checkContainer, { childList: true, subtree: true });
+    console.log(`✅ Auto-refresco configurado: ${checkboxes.length} checkboxes, 4 inputs`);
 }
 
 // Eventos
