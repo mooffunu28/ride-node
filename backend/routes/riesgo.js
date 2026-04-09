@@ -4,91 +4,119 @@ const db = require('../db/connection');
 
 router.post('/calcular', async (req, res) => {
     try {
-        const { velocidad, tipo_vehiculo, componentes, id_usuario, idioma = 'es' } = req.body;
+        const { velocidad, distancia, clima, tipoVia, chequeo, tipo_vehiculo, id_usuario, idioma = 'es' } = req.body;
         
         let puntaje = 0;
         let factores = [];
         let recomendaciones = [];
         
-        // Evaluar velocidad
-        if (tipo_vehiculo === 'Moto') {
-            if (velocidad > 80) {
-                puntaje += 50;
-                factores.push(idioma === 'es' ? 'Velocidad extremadamente alta (>80km/h)' : 'Extremely high speed (>80km/h)');
-                recomendaciones.push(idioma === 'es' ? '🚨 Reduce tu velocidad inmediatamente' : '🚨 Reduce your speed immediately');
-            } else if (velocidad > 60) {
-                puntaje += 25;
-                factores.push(idioma === 'es' ? 'Velocidad moderadamente alta (>60km/h)' : 'Moderately high speed (>60km/h)');
-                recomendaciones.push(idioma === 'es' ? '⚠️ Disminuye la velocidad en zonas urbanas' : '⚠️ Reduce speed in urban areas');
-            }
-        } else { // Cicla
-            if (velocidad > 30) {
-                puntaje += 40;
-                factores.push(idioma === 'es' ? 'Velocidad extremadamente alta (>30km/h)' : 'Extremely high speed (>30km/h)');
-                recomendaciones.push(idioma === 'es' ? '🚨 Reduce tu velocidad, máximo seguro 25km/h' : '🚨 Reduce your speed, safe maximum 25km/h');
-            } else if (velocidad > 20) {
-                puntaje += 15;
-                factores.push(idioma === 'es' ? 'Velocidad moderadamente alta (>20km/h)' : 'Moderately high speed (>20km/h)');
-            }
+        // Mapeo de nombres de componentes a las claves esperadas
+        const tieneCasco = chequeo['Casco'] === true;
+        const tieneFrenos = chequeo['Frenos Delanteros'] === true || chequeo['Frenos Traseros'] === true || chequeo['Frenos'] === true;
+        const tieneLuces = chequeo['Luces Delanteras'] === true || chequeo['Luces Traseras'] === true || chequeo['Luces'] === true;
+        const tieneReflectivos = chequeo['Chaleco Reflectivo'] === true || chequeo['Reflectivos'] === true;
+        const tieneEspejos = chequeo['Espejos Retrovisores'] === true;
+        const tieneNeumaticos = chequeo['Neumáticos'] === true;
+        
+        // 1. FACTORES DEL CHEQUEO PREVENTIVO (PESO ALTO)
+        if (!tieneCasco) {
+            puntaje += 40;
+            factores.push(idioma === 'es' ? '❌ CASCO: No verificado o en mal estado' : '❌ HELMET: Not verified or in bad condition');
+            recomendaciones.push(idioma === 'es' ? '🚨 Usar casco certificado puede salvar tu vida' : '🚨 Wearing a certified helmet can save your life');
         }
         
-        // Evaluar componentes
-        if (componentes) {
-            if (!componentes.casco) {
-                puntaje += 35;
-                factores.push(idioma === 'es' ? 'No uso de casco' : 'Not wearing a helmet');
-                recomendaciones.push(idioma === 'es' ? '🚨 CASCO OBLIGATORIO. Reduce un 70% el riesgo de muerte' : '🚨 HELMET MANDATORY. Reduces death risk by 70%');
-            }
-            
-            if (!componentes.luces) {
-                puntaje += 25;
-                factores.push(idioma === 'es' ? 'Sin luces funcionando' : 'No working lights');
-                recomendaciones.push(idioma === 'es' ? '💡 Usa luces delantera y trasera. Sé visible' : '💡 Use front and rear lights. Be visible');
-            }
-            
-            if (!componentes.frenos) {
-                puntaje += 30;
-                factores.push(idioma === 'es' ? 'Frenos en mal estado' : 'Brakes in poor condition');
-                recomendaciones.push(idioma === 'es' ? '🔧 Revisa tus frenos antes de salir' : '🔧 Check your brakes before riding');
-            }
-            
-            if (tipo_vehiculo === 'Cicla' && !componentes.reflectivos) {
-                puntaje += 15;
-                factores.push(idioma === 'es' ? 'Sin elementos reflectivos' : 'No reflective elements');
-                recomendaciones.push(idioma === 'es' ? '🦺 Usa chaleco reflectivo o bandas reflectivas' : '🦺 Use reflective vest or reflective bands');
-            }
-            
-            if (tipo_vehiculo === 'Moto' && !componentes.espejos) {
-                puntaje += 10;
-                factores.push(idioma === 'es' ? 'Espejos en mal estado o ausentes' : 'Mirrors in poor condition or missing');
-                recomendaciones.push(idioma === 'es' ? '🔍 Ajusta tus espejos correctamente' : '🔍 Adjust your mirrors correctly');
-            }
+        if (!tieneFrenos) {
+            puntaje += 35;
+            factores.push(idioma === 'es' ? '❌ FRENOS: No verificados' : '❌ BRAKES: Not verified');
+            recomendaciones.push(idioma === 'es' ? '🔧 Revisa tus frenos antes de cualquier salida' : '🔧 Check your brakes before any ride');
+        }
+        
+        if (!tieneNeumaticos && distancia > 10) {
+            puntaje += 20;
+            factores.push(idioma === 'es' ? '❌ NEUMÁTICOS: Estado no verificado para viaje largo' : '❌ TYRES: Condition not verified for long trip');
+            recomendaciones.push(idioma === 'es' ? '🛞 Verifica presión y dibujo de los neumáticos' : '🛞 Check tyre pressure and tread');
+        }
+        
+        // 2. FACTORES DE VISIBILIDAD (dependen del clima)
+        if ((clima === 'noche' || clima === 'niebla') && !tieneLuces) {
+            puntaje += 30;
+            factores.push(idioma === 'es' ? '❌ LUCES: No funcionan para circular de noche/niebla' : '❌ LIGHTS: Not working for night/fog riding');
+            recomendaciones.push(idioma === 'es' ? '💡 Instala y verifica tus luces antes de salir' : '💡 Install and check your lights before riding');
+        }
+        
+        if ((clima === 'noche' || clima === 'niebla') && !tieneReflectivos) {
+            puntaje += 15;
+            factores.push(idioma === 'es' ? '⚠️ REFLECTIVOS: No tienes elementos reflectivos para poca visibilidad' : '⚠️ REFLECTIVE: No reflective elements for low visibility');
+            recomendaciones.push(idioma === 'es' ? '🦺 Usa chaleco o bandas reflectivas' : '🦺 Use reflective vest or bands');
+        }
+        
+        // 3. FACTORES DE VÍA
+        if (tipoVia === 'carretera') {
+            puntaje += 25;
+            factores.push(idioma === 'es' ? '⚠️ CARRETERA: Vehículos a alta velocidad' : '⚠️ HIGHWAY: High speed vehicles');
+            recomendaciones.push(idioma === 'es' ? '🚨 Extremar precauciones, mantener distancia' : '🚨 Take extreme precautions, keep distance');
+        } else if (tipoVia === 'rural') {
+            puntaje += 10;
+            factores.push(idioma === 'es' ? '⚠️ Vía rural: Menor iluminación y posible mal estado' : '⚠️ Rural road: Less lighting and possible poor condition');
+            recomendaciones.push(idioma === 'es' ? '🔦 Lleva luces potentes y herramientas adicionales' : '🔦 Bring powerful lights and additional tools');
+        }
+        
+        // 4. FACTORES CLIMÁTICOS
+        if (clima === 'lluvia') {
+            puntaje += 25;
+            factores.push(idioma === 'es' ? '⚠️ Lluvia: Pavimento mojado reduce adherencia' : '⚠️ Rain: Wet pavement reduces grip');
+            recomendaciones.push(idioma === 'es' ? '☔ Reduce velocidad y aumenta distancia de frenado' : '☔ Reduce speed and increase braking distance');
+        } else if (clima === 'niebla') {
+            puntaje += 30;
+            factores.push(idioma === 'es' ? '⚠️ Niebla: Visibilidad severamente reducida' : '⚠️ Fog: Severely reduced visibility');
+            recomendaciones.push(idioma === 'es' ? '🌫️ Considera posponer el viaje hasta que mejore la visibilidad' : '🌫️ Consider postponing the trip until visibility improves');
+        } else if (clima === 'noche') {
+            puntaje += 10;
+            factores.push(idioma === 'es' ? '🌙 Noche: Visibilidad reducida' : '🌙 Night: Reduced visibility');
+            recomendaciones.push(idioma === 'es' ? '💡 Usa luces y chaleco reflectivo' : '💡 Use lights and reflective vest');
+        }
+        
+        // 5. FACTOR DISTANCIA (Fatiga)
+        if (distancia > 300) {
+            puntaje += 20;
+            factores.push(idioma === 'es' ? `📏 Distancia EXTREMA: ${distancia} km (alto riesgo de fatiga)` : `📏 EXTREME distance: ${distancia} km (high risk of fatigue)`);
+            recomendaciones.push(idioma === 'es' ? '🛑 Planifica descansos cada 2 horas' : '🛑 Plan breaks every 2 hours');
+        } else if (distancia > 150) {
+            puntaje += 12;
+            factores.push(idioma === 'es' ? `📏 Distancia larga: ${distancia} km` : `📏 Long distance: ${distancia} km`);
+            recomendaciones.push(idioma === 'es' ? '🧴 Lleva agua, alimentos y revisa combustible' : '🧴 Bring water, food and check fuel');
+        } else if (distancia > 50) {
+            puntaje += 5;
+            factores.push(idioma === 'es' ? `📏 Distancia moderada: ${distancia} km` : `📏 Moderate distance: ${distancia} km`);
+        }
+        
+        // 6. VELOCIDAD (máx 60 urbana, 80 rural, 100 carretera)
+        let limiteVelocidad = 60;
+        if (tipoVia === 'rural') limiteVelocidad = 80;
+        if (tipoVia === 'carretera') limiteVelocidad = 100;
+        
+        if (velocidad > limiteVelocidad) {
+            const exceso = velocidad - limiteVelocidad;
+            puntaje += Math.min(40, exceso * 2);
+            factores.push(idioma === 'es' ? `⚠️ Velocidad: ${velocidad} km/h (excede el límite de ${limiteVelocidad} km/h para ${tipoVia})` : `⚠️ Speed: ${velocidad} km/h (exceeds ${limiteVelocidad} km/h limit for ${tipoVia})`);
+            recomendaciones.push(idioma === 'es' ? `🐌 Reduce tu velocidad máxima a ${limiteVelocidad} km/h` : `🐌 Reduce your maximum speed to ${limiteVelocidad} km/h`);
         }
         
         // Determinar nivel
         let nivel, mensaje;
         
         if (puntaje >= 70) {
-            nivel = 'crítico';
-            mensaje = idioma === 'es' ? '🚨 ¡ALTO RIESGO! Detente ahora. Revisa tu vehículo.' : '🚨 HIGH RISK! Stop now. Check your vehicle.';
+            nivel = 'critico';
+            mensaje = idioma === 'es' ? '🚨 ¡ALTO RIESGO! NO realices este viaje hasta corregir los riesgos.' : '🚨 HIGH RISK! DO NOT take this trip until risks are corrected.';
         } else if (puntaje >= 40) {
             nivel = 'moderado';
-            mensaje = idioma === 'es' ? '⚠️ Riesgo moderado. Toma precauciones.' : '⚠️ Moderate risk. Take precautions.';
+            mensaje = idioma === 'es' ? '⚠️ Riesgo moderado. Toma las precauciones recomendadas.' : '⚠️ Moderate risk. Take recommended precautions.';
         } else if (puntaje >= 20) {
             nivel = 'leve';
             mensaje = idioma === 'es' ? 'ℹ️ Riesgo leve. Pequeñas mejoras aumentan tu seguridad.' : 'ℹ️ Low risk. Small improvements increase your safety.';
         } else {
             nivel = 'seguro';
-            mensaje = idioma === 'es' ? '✅ ¡Vas bien! Mantén estos hábitos.' : '✅ You are doing well! Keep these habits.';
-        }
-        
-        // Guardar notificación si hay riesgo alto
-        if (id_usuario && puntaje >= 40) {
-            await db.query(
-                `INSERT INTO notificaciones_historial (id_usuario, mensaje, nivel_urgencia) 
-                 VALUES (?, ?, ?)`,
-                [id_usuario, mensaje, nivel === 'crítico' ? 'Crítico' : 'Alto']
-            );
+            mensaje = idioma === 'es' ? '✅ ¡Viaje seguro! Recuerda siempre priorizar tu seguridad.' : '✅ Safe trip! Always prioritize your safety.';
         }
         
         res.json({
