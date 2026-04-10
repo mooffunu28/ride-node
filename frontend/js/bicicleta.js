@@ -1,4 +1,4 @@
-// ==================== VERSIÓN DEFINITIVA ====================
+// ==================== VERSIÓN CON CHECKBOXES MARCADOS POR DEFECTO ====================
 console.log('✅ bicicleta.js cargado');
 
 const textos = {
@@ -56,7 +56,7 @@ async function cargarChequeo() {
         const res = await fetch(`/api/chequeo?tipo=Cicla&idioma=${idiomaActual}`);
         const data = await res.json();
         if (data.data && data.data.length > 0) {
-            // Mostrar checklist preventivo
+            // Mostrar checklist preventivo (con checkboxes SIN marcar por defecto)
             container.innerHTML = data.data.map(c => `
                 <div class="checklist-item">
                     <input type="checkbox" class="check-componente" data-nombre="${c.nom_comp}">
@@ -68,16 +68,15 @@ async function cargarChequeo() {
                 </div>
             `).join('');
             
-            // Mostrar checkboxes de la calculadora
+            // Mostrar checkboxes de la calculadora - MARCADOS POR DEFECTO (checked)
             checkContainer.innerHTML = data.data.map(c => `
                 <label class="checkbox-label">
-                    <input type="checkbox" class="check-riesgo" data-nombre="${c.nom_comp}">
+                    <input type="checkbox" class="check-riesgo" data-nombre="${c.nom_comp}" checked>
                     ${c.nom_comp} ${textos[idiomaActual].buen_estado}
                 </label>
             `).join('');
             
             // ==================== EVENTOS ====================
-            // Función principal que calcula el riesgo
             function actualizarRiesgo() {
                 const velocidad = parseInt(document.getElementById('velocidad')?.value) || 0;
                 const distancia = parseInt(document.getElementById('distancia')?.value) || 0;
@@ -160,7 +159,7 @@ async function cargarChequeo() {
             document.getElementById('tipo_via').addEventListener('change', () => actualizarRiesgo());
             document.getElementById('calcularRiesgo').addEventListener('click', () => actualizarRiesgo());
             
-            // Calcular riesgo inicial
+            // Calcular riesgo inicial (debería dar 0 porque todo está marcado)
             setTimeout(() => actualizarRiesgo(), 500);
         }
     } catch(e) { container.innerHTML = '<div class="error-message">Error</div>'; }
