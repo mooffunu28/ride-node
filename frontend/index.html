@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="/css/style.css">
     <style>
-        
         .btn-idioma-flotante {
             position: fixed;
             top: 20px;
@@ -27,8 +26,6 @@
             background: #2c7a5e;
             transform: scale(1.02);
         }
-        
-        
         .logout-btn {
             position: fixed;
             top: 20px;
@@ -45,8 +42,6 @@
         .logout-btn:hover {
             background: #c00;
         }
-        
-        /* Logo */
         .brand-logo {
             width: 80px;
             height: auto;
@@ -61,28 +56,22 @@
     </style>
 </head>
 <body>
-    
     <div class="bg-animation">
         <div class="bg-shape shape-1"></div>
         <div class="bg-shape shape-2"></div>
         <div class="bg-shape shape-3"></div>
     </div>
 
-    
-    <button id="btnIdiomaIndex" class="btn-idioma-flotante">
-        🌐 English
-    </button>
+    <button id="btnIdiomaIndex" class="btn-idioma-flotante">🌐 English</button>
 
     <div class="auth-wrapper">
         <div class="auth-container">
-            <!-- Logo y branding -->
             <div class="auth-brand">
                 <img src="/assets/logo.png" alt="R.I.D.E. Logo" class="brand-logo" onerror="this.style.display='none'">
                 <h1 class="brand-title">R.I.D.E</h1>
                 <p class="brand-subtitle">Road Information & Digital Enforcement</p>
             </div>
 
-            
             <div id="authSection">
                 <div class="auth-card">
                     <div class="auth-tabs">
@@ -94,7 +83,6 @@
                         </button>
                     </div>
 
-                    
                     <div id="loginForm" class="auth-form">
                         <div class="form-group">
                             <label for="login_correo"><i class="fas fa-envelope"></i> Correo electrónico</label>
@@ -110,7 +98,6 @@
                         </button>
                     </div>
 
-                    
                     <div id="registerForm" class="auth-form hidden">
                         <div class="form-row">
                             <div class="form-group">
@@ -163,7 +150,6 @@
                 </div>
             </div>
 
-            
             <div id="dashboardSection" class="dashboard-container hidden">
                 <button class="logout-btn" onclick="cerrarSesion()">
                     <i class="fas fa-sign-out-alt"></i> Cerrar sesión
@@ -178,7 +164,6 @@
                 </div>
                 
                 <div class="vehicles-grid">
-                    
                     <div id="bikeCard" class="vehicle-card" onclick="seleccionarVehiculo('bicicleta')">
                         <div class="card-icon bike-icon">
                             <i class="fas fa-bicycle"></i>
@@ -188,7 +173,6 @@
                         <button class="select-btn">Acceder <i class="fas fa-arrow-right"></i></button>
                     </div>
                     
-                    <!-- Tarjeta Moto -->
                     <div id="motoCard" class="vehicle-card" onclick="seleccionarVehiculo('moto')">
                         <div class="card-icon moto-icon">
                             <i class="fas fa-motorcycle"></i>
@@ -203,5 +187,121 @@
     </div>
 
     <script src="/js/auth.js"></script>
+    
+    
+    <script>
+        const textosIndex = {
+            es: {
+                tab_login: "Iniciar Sesión", tab_register: "Registrarse",
+                login_titulo: "🔐 Iniciar Sesión", login_correo: "Correo electrónico", login_password: "Contraseña", login_btn: "Iniciar Sesión",
+                register_titulo: "📝 Registrarse", register_nombre: "Nombre completo", register_correo: "Correo electrónico",
+                register_password: "Contraseña", register_edad: "Edad", register_moto: "Moto", register_cicla: "Bicicleta", register_btn: "Crear cuenta",
+                switch_login: "¿Ya tienes cuenta?", switch_register: "¿No tienes cuenta?", switch_login_link: "Inicia sesión aquí", switch_register_link: "Regístrate aquí",
+                footer: "Tus datos están seguros con nosotros",
+                dashboard_bienvenido: "🚦 ¡Bienvenido", dashboard_bienvenido_de_nuevo: "🚦 ¡Bienvenido de nuevo",
+                dashboard_selecciona: "Accede a tu chequeo de seguridad personalizado",
+                dashboard_bici_titulo: "🚲 Bicicleta", dashboard_bici_desc: "Chequeo preventivo, normas de tránsito y calculadora de riesgo", dashboard_bici_btn: "Acceder",
+                dashboard_moto_titulo: "🏍️ Moto", dashboard_moto_desc: "Chequeo preventivo, normas de tránsito y calculadora de riesgo", dashboard_moto_btn: "Acceder",
+                dashboard_cerrar: "Cerrar sesión",
+                vehiculo_mensaje_bici: "🚲 Tu vehículo registrado es una Bicicleta", vehiculo_mensaje_moto: "🏍️ Tu vehículo registrado es una Moto"
+            },
+            en: {
+                tab_login: "Login", tab_register: "Register",
+                login_titulo: "🔐 Login", login_correo: "Email", login_password: "Password", login_btn: "Login",
+                register_titulo: "📝 Register", register_nombre: "Full name", register_correo: "Email",
+                register_password: "Password", register_edad: "Age", register_moto: "Motorcycle", register_cicla: "Bicycle", register_btn: "Create account",
+                switch_login: "Already have an account?", switch_register: "Don't have an account?", switch_login_link: "Login here", switch_register_link: "Register here",
+                footer: "Your data is safe with us",
+                dashboard_bienvenido: "🚦 Welcome", dashboard_bienvenido_de_nuevo: "🚦 Welcome back",
+                dashboard_selecciona: "Access your personalized safety check",
+                dashboard_bici_titulo: "🚲 Bicycle", dashboard_bici_desc: "Preventive check, traffic rules and risk calculator", dashboard_bici_btn: "Access",
+                dashboard_moto_titulo: "🏍️ Motorcycle", dashboard_moto_desc: "Preventive check, traffic rules and risk calculator", dashboard_moto_btn: "Access",
+                dashboard_cerrar: "Logout",
+                vehiculo_mensaje_bici: "🚲 Your registered vehicle is a Bicycle", vehiculo_mensaje_moto: "🏍️ Your registered vehicle is a Motorcycle"
+            }
+        };
+
+        let idiomaIndex = localStorage.getItem('ride_idioma') || 'es';
+
+        function aplicarTraduccionIndex() {
+            const t = textosIndex[idiomaIndex];
+            
+            document.getElementById('tabLoginBtn').innerHTML = `<i class="fas fa-sign-in-alt"></i> ${t.tab_login}`;
+            document.getElementById('tabRegisterBtn').innerHTML = `<i class="fas fa-user-plus"></i> ${t.tab_register}`;
+            
+            document.querySelector('#loginForm h2').innerHTML = t.login_titulo;
+            document.querySelector('#loginForm .form-group:first-child label').innerHTML = `<i class="fas fa-envelope"></i> ${t.login_correo}`;
+            document.querySelector('#loginForm .form-group:last-child label').innerHTML = `<i class="fas fa-lock"></i> ${t.login_password}`;
+            document.querySelector('#loginForm .btn-submit').innerHTML = `<span>${t.login_btn}</span><i class="fas fa-arrow-right"></i>`;
+            document.querySelector('#loginForm .switch-modal').innerHTML = `${t.switch_register} <a onclick="mostrarRegistro()">${t.switch_register_link}</a>`;
+            
+            document.querySelector('#registerForm h2').innerHTML = t.register_titulo;
+            document.querySelector('#registerForm .form-row:first-child .form-group:first-child label').innerHTML = `<i class="fas fa-user"></i> ${t.register_nombre}`;
+            document.querySelector('#registerForm .form-row:first-child .form-group:last-child label').innerHTML = `<i class="fas fa-envelope"></i> ${t.register_correo}`;
+            document.querySelector('#registerForm .form-row:nth-child(2) .form-group:first-child label').innerHTML = `<i class="fas fa-lock"></i> ${t.register_password}`;
+            document.querySelector('#registerForm .form-row:nth-child(2) .form-group:last-child label').innerHTML = `<i class="fas fa-calendar-alt"></i> ${t.register_edad}`;
+            document.querySelector('.vehicle-option:first-child span').innerHTML = t.register_moto;
+            document.querySelector('.vehicle-option:last-child span').innerHTML = t.register_cicla;
+            document.querySelector('#registerForm .btn-submit').innerHTML = `<span>${t.register_btn}</span><i class="fas fa-user-plus"></i>`;
+            document.querySelector('#registerForm .switch-modal').innerHTML = `${t.switch_login} <a onclick="mostrarLogin()">${t.switch_login_link}</a>`;
+            
+            document.querySelector('.auth-footer p').innerHTML = `<i class="fas fa-shield-alt"></i> ${t.footer}`;
+            
+            const bikeCard = document.getElementById('bikeCard');
+            if (bikeCard) {
+                bikeCard.querySelector('h3').innerHTML = t.dashboard_bici_titulo;
+                bikeCard.querySelector('p').innerHTML = t.dashboard_bici_desc;
+                bikeCard.querySelector('.select-btn').innerHTML = `${t.dashboard_bici_btn} <i class="fas fa-arrow-right"></i>`;
+            }
+            const motoCard = document.getElementById('motoCard');
+            if (motoCard) {
+                motoCard.querySelector('h3').innerHTML = t.dashboard_moto_titulo;
+                motoCard.querySelector('p').innerHTML = t.dashboard_moto_desc;
+                motoCard.querySelector('.select-btn').innerHTML = `${t.dashboard_moto_btn} <i class="fas fa-arrow-right"></i>`;
+            }
+            
+            document.querySelector('.logout-btn').innerHTML = `<i class="fas fa-sign-out-alt"></i> ${t.dashboard_cerrar}`;
+            
+            const welcomeText = document.querySelector('.welcome-card p:last-child');
+            if (welcomeText && welcomeText !== document.getElementById('vehiculoMensaje')) {
+                welcomeText.innerHTML = t.dashboard_selecciona;
+            }
+            
+            document.getElementById('login_correo').placeholder = idiomaIndex === 'es' ? 'usuario@ejemplo.com' : 'user@example.com';
+        }
+
+        function actualizarDashboardTraduccion() {
+            if (document.getElementById('dashboardSection') && !document.getElementById('dashboardSection').classList.contains('hidden')) {
+                const userData = JSON.parse(localStorage.getItem('ride_usuario'));
+                const t = textosIndex[idiomaIndex];
+                document.getElementById('welcomeTitle').innerHTML = `${t.dashboard_bienvenido}, ${userData.nombre}!`;
+                const vehiculoMensaje = document.getElementById('vehiculoMensaje');
+                if (vehiculoMensaje && userData) {
+                    vehiculoMensaje.innerHTML = userData.tipo_vehiculo === 'Cicla' ? t.vehiculo_mensaje_bici : t.vehiculo_mensaje_moto;
+                }
+            }
+        }
+
+        const btnIdioma = document.getElementById('btnIdiomaIndex');
+        if (btnIdioma) {
+            btnIdioma.innerHTML = idiomaIndex === 'es' ? '🌐 English' : '🌐 Español';
+            btnIdioma.onclick = function() {
+                idiomaIndex = idiomaIndex === 'es' ? 'en' : 'es';
+                localStorage.setItem('ride_idioma', idiomaIndex);
+                this.innerHTML = idiomaIndex === 'es' ? '🌐 English' : '🌐 Español';
+                aplicarTraduccionIndex();
+                actualizarDashboardTraduccion();
+            };
+        }
+
+        aplicarTraduccionIndex();
+        
+        const observer = new MutationObserver(function() {
+            if (document.getElementById('dashboardSection') && !document.getElementById('dashboardSection').classList.contains('hidden')) {
+                actualizarDashboardTraduccion();
+            }
+        });
+        observer.observe(document.getElementById('dashboardSection'), { attributes: true, attributeFilter: ['class'] });
+    </script>
 </body>
 </html>
