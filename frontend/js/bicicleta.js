@@ -1,9 +1,9 @@
-// ==================== VERSIÓN DEFINITIVA - FORZAR ACTUALIZACIÓN ====================
+// ==================== VERSIÓN DEFINITIVA ====================
 console.log('✅ bicicleta.js cargado');
 
 const textos = {
-    es: { prioridad: "Prioridad", buen_estado: "en buen estado", cargando: "Cargando...", evaluando: "Evaluando riesgo..." },
-    en: { prioridad: "Priority", buen_estado: "in good condition", cargando: "Loading...", evaluando: "Assessing risk..." }
+    es: { prioridad: "Prioridad", buen_estado: "en buen estado", cargando: "Cargando...", evaluando: "Calculando riesgo..." },
+    en: { prioridad: "Priority", buen_estado: "in good condition", cargando: "Loading...", evaluando: "Calculating risk..." }
 };
 
 let idiomaActual = localStorage.getItem('ride_idioma') || 'es';
@@ -75,61 +75,47 @@ async function cargarChequeo() {
                 </label>
             `).join('');
             
-            sincronizarCheckboxes();
-            configurarAutoUpdate();
+            // Sincronizar checkboxes
+            document.querySelectorAll('.check-componente').forEach(cb => {
+                cb.addEventListener('change', function() {
+                    const nombre = this.getAttribute('data-nombre');
+                    const riesgoCb = document.querySelector(`.check-riesgo[data-nombre="${nombre}"]`);
+                    if (riesgoCb) riesgoCb.checked = this.checked;
+                    evaluarRiesgoViaje();
+                });
+            });
             
-            // Forzar evaluación inicial
-            setTimeout(() => evaluarRiesgoViaje(), 500);
+            document.querySelectorAll('.check-riesgo').forEach(cb => {
+                cb.addEventListener('change', function() {
+                    const nombre = this.getAttribute('data-nombre');
+                    const preventivoCb = document.querySelector(`.check-componente[data-nombre="${nombre}"]`);
+                    if (preventivoCb) preventivoCb.checked = this.checked;
+                    evaluarRiesgoViaje();
+                });
+            });
+            
+            configurarAutoUpdate();
+            evaluarRiesgoViaje();
         }
     } catch(e) { container.innerHTML = '<div class="error-message">Error</div>'; }
 }
 
-function sincronizarCheckboxes() {
-    // Chequeo Preventivo -> Calculadora
-    document.querySelectorAll('.check-componente').forEach(cb => {
-        cb.removeEventListener('change', sincronizarDePreventivoARiesgo);
-        cb.addEventListener('change', sincronizarDePreventivoARiesgo);
-    });
-    
-    // Calculadora -> Chequeo Preventivo
-    document.querySelectorAll('.check-riesgo').forEach(cb => {
-        cb.removeEventListener('change', sincronizarDeRiesgoAPreventivo);
-        cb.addEventListener('change', sincronizarDeRiesgoAPreventivo);
-    });
-}
-
-function sincronizarDePreventivoARiesgo() {
-    const nombre = this.getAttribute('data-nombre');
-    const checkboxRiesgo = document.querySelector(`.check-riesgo[data-nombre="${nombre}"]`);
-    if (checkboxRiesgo && checkboxRiesgo.checked !== this.checked) {
-        checkboxRiesgo.checked = this.checked;
-        checkboxRiesgo.dispatchEvent(new Event('change'));
-    }
-}
-
-function sincronizarDeRiesgoAPreventivo() {
-    const nombre = this.getAttribute('data-nombre');
-    const checkboxPreventivo = document.querySelector(`.check-componente[data-nombre="${nombre}"]`);
-    if (checkboxPreventivo && checkboxPreventivo.checked !== this.checked) {
-        checkboxPreventivo.checked = this.checked;
-    }
-}
-
 async function evaluarRiesgoViaje() {
-    console.log('🔄 Evaluando riesgo...');
+    console.log('🔄 Evaluando riesgo con checkboxes actuales...');
     
     const velocidad = parseInt(document.getElementById('velocidad')?.value) || 0;
     const distancia = parseInt(document.getElementById('distancia')?.value) || 0;
     const clima = document.getElementById('clima')?.value || 'dia';
     const tipoVia = document.getElementById('tipo_via')?.value || 'urbana';
     
-    const checkboxes = document.querySelectorAll('.check-riesgo');
+    // Leer TODOS los checkboxes de riesgo en este momento
     const chequeo = {};
-    checkboxes.forEach(cb => { 
-        chequeo[cb.getAttribute('data-nombre')] = cb.checked; 
+    document.querySelectorAll('.check-riesgo').forEach(cb => {
+        const nombre = cb.getAttribute('data-nombre');
+        chequeo[nombre] = cb.checked;
     });
     
-    console.log('📤 Enviando:', { velocidad, distancia, clima, tipoVia, chequeo });
+    console.log('📊 Chequeo actual:', chequeo);
     
     const divResultado = document.getElementById('resultado-riesgo');
     if (!divResultado) return;
@@ -150,7 +136,7 @@ async function evaluarRiesgoViaje() {
             })
         });
         const resultado = await response.json();
-        console.log('📥 Respuesta:', resultado);
+        console.log('📊 Resultado:', resultado);
         
         let clase = '';
         let nivelTexto = '';
@@ -183,7 +169,7 @@ async function evaluarRiesgoViaje() {
 function configurarAutoUpdate() {
     function triggerAutoUpdate() {
         if (timeoutAutoUpdate) clearTimeout(timeoutAutoUpdate);
-        timeoutAutoUpdate = setTimeout(() => evaluarRiesgoViaje(), 400);
+        timeoutAutoUpdate = setTimeout(() => evaluarRiesgoViaje(), 300);
     }
     
     ['velocidad', 'distancia', 'clima', 'tipo_via'].forEach(id => {
@@ -196,24 +182,16 @@ function configurarAutoUpdate() {
         }
     });
     
-    document.querySelectorAll('.check-riesgo').forEach(cb => {
-        cb.removeEventListener('change', triggerAutoUpdate);
-        cb.addEventListener('change', triggerAutoUpdate);
-    });
-    
     console.log('✅ Auto-refresco configurado');
 }
 
-// Eventos
 document.getElementById('btnIdioma')?.addEventListener('click', cambiarIdioma);
 document.getElementById('calcularRiesgo')?.addEventListener('click', evaluarRiesgoViaje);
 
-// Verificar autenticación
 const token = localStorage.getItem('ride_token');
 const usuario = localStorage.getItem('ride_usuario');
 if (!token || !usuario) window.location.href = '/';
 
-// Inicializar
 aplicarTextos();
 cargarNormas();
 cargarChequeo();
