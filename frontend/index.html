@@ -7,6 +7,43 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .btn-idioma-flotante {
+            position: fixed;
+            top: 20px;
+            right: 120px;
+            z-index: 1000;
+            background: #1a3a3a;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .btn-idioma-flotante:hover {
+            background: #2c7a5e;
+            transform: scale(1.02);
+        }
+        .logout-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+        .brand-logo {
+            width: 80px;
+            height: auto;
+            margin-bottom: 1rem;
+            display: inline-block;
+        }
+        .dashboard-logo {
+            width: 60px;
+            height: auto;
+            margin-bottom: 1rem;
+        }
+    </style>
 </head>
 <body>
     <!-- Fondo con efecto de movimiento -->
@@ -16,13 +53,16 @@
         <div class="bg-shape shape-3"></div>
     </div>
 
+    <!-- Botón de idioma flotante -->
+    <button id="btnIdiomaIndex" class="btn-idioma-flotante">
+        🌐 English
+    </button>
+
     <div class="auth-wrapper">
         <div class="auth-container">
             <!-- Logo y branding -->
             <div class="auth-brand">
-                <div class="brand-icon">
-                    <i class="fas fa-shield-haltered"></i>
-                </div>
+                <img src="/assets/logo.png" alt="R.I.D.E. Logo" class="brand-logo" onerror="this.style.display='none'">
                 <h1 class="brand-title">R.I.D.E</h1>
                 <p class="brand-subtitle">Road Information & Digital Enforcement</p>
             </div>
@@ -113,6 +153,7 @@
                 </button>
                 
                 <div class="welcome-card">
+                    <img src="/assets/logo.png" alt="R.I.D.E." class="dashboard-logo" onerror="this.style.display='none'">
                     <h1 id="welcomeTitle">🚦 ¡Bienvenido!</h1>
                     <p id="userEmail" class="user-email"></p>
                     <p id="vehiculoMensaje" style="margin-top: 10px; font-size: 0.9rem;"></p>
