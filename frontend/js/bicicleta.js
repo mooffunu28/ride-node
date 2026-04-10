@@ -1,4 +1,4 @@
-// ==================== VERSIÓN SIMPLIFICADA Y FUNCIONAL ====================
+// ==================== VERSIÓN DEFINITIVA ====================
 console.log('✅ bicicleta.js cargado');
 
 const textos = {
@@ -7,7 +7,6 @@ const textos = {
 };
 
 let idiomaActual = localStorage.getItem('ride_idioma') || 'es';
-let timeoutAutoUpdate = null;
 
 function aplicarTextos() {
     const btnIdioma = document.getElementById('btnIdioma');
@@ -57,6 +56,7 @@ async function cargarChequeo() {
         const res = await fetch(`/api/chequeo?tipo=Cicla&idioma=${idiomaActual}`);
         const data = await res.json();
         if (data.data && data.data.length > 0) {
+            // Mostrar checklist preventivo
             container.innerHTML = data.data.map(c => `
                 <div class="checklist-item">
                     <input type="checkbox" class="check-componente" data-nombre="${c.nom_comp}">
@@ -68,6 +68,7 @@ async function cargarChequeo() {
                 </div>
             `).join('');
             
+            // Mostrar checkboxes de la calculadora
             checkContainer.innerHTML = data.data.map(c => `
                 <label class="checkbox-label">
                     <input type="checkbox" class="check-riesgo" data-nombre="${c.nom_comp}">
@@ -75,105 +76,94 @@ async function cargarChequeo() {
                 </label>
             `).join('');
             
-            // ==================== CONFIGURAR EVENTOS ====================
-            // Cuando se marca un checkbox del checklist preventivo
+            // ==================== EVENTOS ====================
+            // Función principal que calcula el riesgo
+            function actualizarRiesgo() {
+                const velocidad = parseInt(document.getElementById('velocidad')?.value) || 0;
+                const distancia = parseInt(document.getElementById('distancia')?.value) || 0;
+                const clima = document.getElementById('clima')?.value || 'dia';
+                const tipoVia = document.getElementById('tipo_via')?.value || 'urbana';
+                
+                // Leer el estado de los checkboxes de la calculadora
+                const chequeo = {};
+                document.querySelectorAll('.check-riesgo').forEach(cb => {
+                    const nombre = cb.getAttribute('data-nombre');
+                    if (nombre) chequeo[nombre] = cb.checked;
+                });
+                
+                const divResultado = document.getElementById('resultado-riesgo');
+                if (!divResultado) return;
+                divResultado.innerHTML = `<div class="loading">${textos[idiomaActual].evaluando}</div>`;
+                
+                fetch('/api/riesgo/calcular', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        velocidad, distancia, clima, tipoVia, chequeo, 
+                        tipo_vehiculo: 'Cicla', idioma: idiomaActual 
+                    })
+                })
+                .then(r => r.json())
+                .then(resultado => {
+                    let clase = '';
+                    let nivelTexto = '';
+                    if (resultado.nivel === 'critico') { 
+                        clase = 'riesgo-critico'; 
+                        nivelTexto = idiomaActual === 'es' ? '🚨 RIESGO CRÍTICO' : '🚨 CRITICAL RISK'; 
+                    } else if (resultado.nivel === 'moderado') { 
+                        clase = 'riesgo-moderado'; 
+                        nivelTexto = idiomaActual === 'es' ? '⚠️ RIESGO MODERADO' : '⚠️ MODERATE RISK'; 
+                    } else { 
+                        clase = 'riesgo-seguro'; 
+                        nivelTexto = idiomaActual === 'es' ? '✅ RIESGO BAJO' : '✅ LOW RISK'; 
+                    }
+                    
+                    divResultado.innerHTML = `
+                        <div class="${clase}" style="padding:0.8rem;">
+                            <strong>${nivelTexto}</strong>
+                            <p>${resultado.mensaje || ''}</p>
+                            <p><strong>📊 Puntaje:</strong> ${resultado.puntaje}/100</p>
+                            ${resultado.factores?.length ? `<strong>📋 Factores:</strong><ul>${resultado.factores.map(f => `<li>${f}</li>`).join('')}</ul>` : ''}
+                            ${resultado.recomendaciones?.length ? `<strong>✅ Recomendaciones:</strong><ul>${resultado.recomendaciones.map(r => `<li>${r}</li>`).join('')}</ul>` : ''}
+                        </div>
+                    `;
+                })
+                .catch(error => {
+                    divResultado.innerHTML = `<div class="riesgo-critico">❌ Error: ${error.message}</div>`;
+                });
+            }
+            
+            // Sincronizar: Chequeo Preventivo -> Calculadora
             document.querySelectorAll('.check-componente').forEach(cb => {
-                cb.onchange = function() {
+                cb.addEventListener('change', function() {
                     const nombre = this.getAttribute('data-nombre');
                     const riesgoCb = document.querySelector(`.check-riesgo[data-nombre="${nombre}"]`);
                     if (riesgoCb) riesgoCb.checked = this.checked;
-                    calcularRiesgo();
-                };
+                    actualizarRiesgo();
+                });
             });
             
-            // Cuando se marca un checkbox de la calculadora
+            // Sincronizar: Calculadora -> Chequeo Preventivo
             document.querySelectorAll('.check-riesgo').forEach(cb => {
-                cb.onchange = function() {
+                cb.addEventListener('change', function() {
                     const nombre = this.getAttribute('data-nombre');
                     const preventivoCb = document.querySelector(`.check-componente[data-nombre="${nombre}"]`);
                     if (preventivoCb) preventivoCb.checked = this.checked;
-                    calcularRiesgo();
-                };
+                    actualizarRiesgo();
+                });
             });
             
-            // Inputs de velocidad, distancia, clima, tipo_vía
-            document.getElementById('velocidad').oninput = () => calcularRiesgo();
-            document.getElementById('distancia').oninput = () => calcularRiesgo();
-            document.getElementById('clima').onchange = () => calcularRiesgo();
-            document.getElementById('tipo_via').onchange = () => calcularRiesgo();
-            
-            // Botón calcular
-            document.getElementById('calcularRiesgo').onclick = () => calcularRiesgo();
+            // Eventos de inputs
+            document.getElementById('velocidad').addEventListener('input', () => actualizarRiesgo());
+            document.getElementById('distancia').addEventListener('input', () => actualizarRiesgo());
+            document.getElementById('clima').addEventListener('change', () => actualizarRiesgo());
+            document.getElementById('tipo_via').addEventListener('change', () => actualizarRiesgo());
+            document.getElementById('calcularRiesgo').addEventListener('click', () => actualizarRiesgo());
             
             // Calcular riesgo inicial
-            setTimeout(() => calcularRiesgo(), 500);
+            setTimeout(() => actualizarRiesgo(), 500);
         }
     } catch(e) { container.innerHTML = '<div class="error-message">Error</div>'; }
-}
-
-async function calcularRiesgo() {
-    const velocidad = parseInt(document.getElementById('velocidad')?.value) || 0;
-    const distancia = parseInt(document.getElementById('distancia')?.value) || 0;
-    const clima = document.getElementById('clima')?.value || 'dia';
-    const tipoVia = document.getElementById('tipo_via')?.value || 'urbana';
-    
-    // Leer todos los checkboxes de la calculadora
-    const chequeo = {};
-    document.querySelectorAll('.check-riesgo').forEach(cb => {
-        const nombre = cb.getAttribute('data-nombre');
-        if (nombre) chequeo[nombre] = cb.checked;
-    });
-    
-    console.log('📊 Calculando riesgo...', { velocidad, distancia, chequeo });
-    
-    const divResultado = document.getElementById('resultado-riesgo');
-    if (!divResultado) return;
-    divResultado.innerHTML = `<div class="loading">${textos[idiomaActual].evaluando}</div>`;
-    
-    try {
-        const response = await fetch('/api/riesgo/calcular', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                velocidad, 
-                distancia, 
-                clima, 
-                tipoVia, 
-                chequeo, 
-                tipo_vehiculo: 'Cicla', 
-                idioma: idiomaActual 
-            })
-        });
-        const resultado = await response.json();
-        
-        console.log('📊 Resultado:', resultado.puntaje);
-        
-        let clase = '';
-        let nivelTexto = '';
-        if (resultado.nivel === 'critico') { 
-            clase = 'riesgo-critico'; 
-            nivelTexto = idiomaActual === 'es' ? '🚨 RIESGO CRÍTICO' : '🚨 CRITICAL RISK'; 
-        } else if (resultado.nivel === 'moderado') { 
-            clase = 'riesgo-moderado'; 
-            nivelTexto = idiomaActual === 'es' ? '⚠️ RIESGO MODERADO' : '⚠️ MODERATE RISK'; 
-        } else { 
-            clase = 'riesgo-seguro'; 
-            nivelTexto = idiomaActual === 'es' ? '✅ RIESGO BAJO' : '✅ LOW RISK'; 
-        }
-        
-        divResultado.innerHTML = `
-            <div class="${clase}" style="padding:0.8rem;">
-                <strong>${nivelTexto}</strong>
-                <p>${resultado.mensaje || ''}</p>
-                <p><strong>📊 Puntaje:</strong> ${resultado.puntaje}/100</p>
-                ${resultado.factores?.length ? `<strong>📋 Factores:</strong><ul>${resultado.factores.map(f => `<li>${f}</li>`).join('')}</ul>` : ''}
-                ${resultado.recomendaciones?.length ? `<strong>✅ Recomendaciones:</strong><ul>${resultado.recomendaciones.map(r => `<li>${r}</li>`).join('')}</ul>` : ''}
-            </div>
-        `;
-    } catch (error) {
-        console.error('❌ Error:', error);
-        divResultado.innerHTML = `<div class="riesgo-critico">❌ Error: ${error.message}</div>`;
-    }
 }
 
 // Verificar autenticación
