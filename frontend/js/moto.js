@@ -1,4 +1,4 @@
-// ==================== VERSIÓN CON CHECKBOXES MARCADOS POR DEFECTO ====================
+// ==================== VERSIÓN SIN DUPLICADOS ====================
 console.log('✅ moto.js cargado');
 
 const textos = {
@@ -56,10 +56,10 @@ async function cargarChequeo() {
         const res = await fetch(`/api/chequeo?tipo=Moto&idioma=${idiomaActual}`);
         const data = await res.json();
         if (data.data && data.data.length > 0) {
-            // Mostrar checklist preventivo (con checkboxes SIN marcar por defecto)
+            // Mostrar SOLO el checklist preventivo (con checkboxes)
             container.innerHTML = data.data.map(c => `
                 <div class="checklist-item">
-                    <input type="checkbox" class="check-componente" data-nombre="${c.nom_comp}">
+                    <input type="checkbox" class="check-riesgo" data-nombre="${c.nom_comp}" checked>
                     <div style="flex:1">
                         <strong>${c.nom_comp}</strong><br>
                         <small>${c.estado_opt}</small><br>
@@ -68,13 +68,10 @@ async function cargarChequeo() {
                 </div>
             `).join('');
             
-            // Mostrar checkboxes de la calculadora - MARCADOS POR DEFECTO (checked)
-            checkContainer.innerHTML = data.data.map(c => `
-                <label class="checkbox-label">
-                    <input type="checkbox" class="check-riesgo" data-nombre="${c.nom_comp}" checked>
-                    ${c.nom_comp} ${textos[idiomaActual].buen_estado}
-                </label>
-            `).join('');
+            // ELIMINAR la sección duplicada de la calculadora
+            if (checkContainer) {
+                checkContainer.innerHTML = '';
+            }
             
             // ==================== EVENTOS ====================
             function actualizarRiesgo() {
@@ -83,7 +80,7 @@ async function cargarChequeo() {
                 const clima = document.getElementById('clima')?.value || 'dia';
                 const tipoVia = document.getElementById('tipo_via')?.value || 'urbana';
                 
-                // Leer el estado de los checkboxes de la calculadora
+                // Leer el estado de TODOS los checkboxes (ahora solo hay una lista)
                 const chequeo = {};
                 document.querySelectorAll('.check-riesgo').forEach(cb => {
                     const nombre = cb.getAttribute('data-nombre');
@@ -132,24 +129,9 @@ async function cargarChequeo() {
                 });
             }
             
-            // Sincronizar: Chequeo Preventivo -> Calculadora
-            document.querySelectorAll('.check-componente').forEach(cb => {
-                cb.addEventListener('change', function() {
-                    const nombre = this.getAttribute('data-nombre');
-                    const riesgoCb = document.querySelector(`.check-riesgo[data-nombre="${nombre}"]`);
-                    if (riesgoCb) riesgoCb.checked = this.checked;
-                    actualizarRiesgo();
-                });
-            });
-            
-            // Sincronizar: Calculadora -> Chequeo Preventivo
+            // Eventos de cambio en los checkboxes
             document.querySelectorAll('.check-riesgo').forEach(cb => {
-                cb.addEventListener('change', function() {
-                    const nombre = this.getAttribute('data-nombre');
-                    const preventivoCb = document.querySelector(`.check-componente[data-nombre="${nombre}"]`);
-                    if (preventivoCb) preventivoCb.checked = this.checked;
-                    actualizarRiesgo();
-                });
+                cb.addEventListener('change', () => actualizarRiesgo());
             });
             
             // Eventos de inputs
@@ -159,7 +141,7 @@ async function cargarChequeo() {
             document.getElementById('tipo_via').addEventListener('change', () => actualizarRiesgo());
             document.getElementById('calcularRiesgo').addEventListener('click', () => actualizarRiesgo());
             
-            // Calcular riesgo inicial (debería dar 0 porque todo está marcado)
+            // Calcular riesgo inicial
             setTimeout(() => actualizarRiesgo(), 500);
         }
     } catch(e) { container.innerHTML = '<div class="error-message">Error</div>'; }
