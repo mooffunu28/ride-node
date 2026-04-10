@@ -1,4 +1,4 @@
-// ==================== VERSIÓN CON TRADUCCIÓN COMPLETA ====================
+// ==================== VERSIÓN COMPLETA CON TRADUCCIÓN ====================
 console.log('✅ bicicleta.js cargado');
 
 const textos = {
@@ -23,6 +23,7 @@ const textos = {
         prioridad: "Prioridad",
         buen_estado: "en buen estado",
         cargando: "Cargando...",
+        evaluando: "Calculando riesgo...",
         multa: "Multa tipo",
         articulo: "Artículo"
     },
@@ -47,6 +48,7 @@ const textos = {
         prioridad: "Priority",
         buen_estado: "in good condition",
         cargando: "Loading...",
+        evaluando: "Calculating risk...",
         multa: "Fine type",
         articulo: "Article"
     }
@@ -57,38 +59,28 @@ let idiomaActual = localStorage.getItem('ride_idioma') || 'es';
 function aplicarTextos() {
     const t = textos[idiomaActual];
     
-    // Títulos principales
     document.getElementById('titulo').innerHTML = t.titulo;
     document.getElementById('subtitulo').innerHTML = t.subtitulo;
     document.getElementById('tituloNormas').innerHTML = t.normas;
     document.getElementById('tituloChequeo').innerHTML = t.chequeo;
     document.getElementById('tituloRiesgo').innerHTML = t.riesgo;
-    
-    // Botones
     document.getElementById('btnCalcularTexto').innerHTML = t.evaluar;
     document.getElementById('btnIdioma').innerHTML = idiomaActual === 'es' ? '🌐 English' : '🌐 Español';
     
-    // Labels de inputs
     const labelVelocidad = document.getElementById('labelVelocidad');
     if (labelVelocidad) labelVelocidad.innerHTML = t.velocidad;
-    
     const labelDistancia = document.getElementById('labelDistancia');
     if (labelDistancia) labelDistancia.innerHTML = t.distancia;
-    
     const labelClima = document.getElementById('labelClima');
     if (labelClima) labelClima.innerHTML = t.clima;
-    
     const labelTipoVia = document.getElementById('labelTipoVia');
     if (labelTipoVia) labelTipoVia.innerHTML = t.tipo_via;
     
-    // Placeholders
     const velocidadInput = document.getElementById('velocidad');
     if (velocidadInput) velocidadInput.placeholder = t.velocidad;
-    
     const distanciaInput = document.getElementById('distancia');
     if (distanciaInput) distanciaInput.placeholder = t.distancia;
     
-    // Select de clima
     const climaSelect = document.getElementById('clima');
     if (climaSelect) {
         climaSelect.options[0].text = t.clima_dia;
@@ -97,7 +89,6 @@ function aplicarTextos() {
         climaSelect.options[3].text = t.clima_niebla;
     }
     
-    // Select de tipo de vía
     const viaSelect = document.getElementById('tipo_via');
     if (viaSelect) {
         viaSelect.options[0].text = t.via_urbana;
@@ -154,18 +145,18 @@ async function cargarChequeo() {
                     <div style="flex:1">
                         <strong>${c.nom_comp}</strong><br>
                         <small>${c.estado_opt}</small><br>
-                        <span class="${c.prioridad === 'Alta' ? 'priority-high' : 'priority-medium'}">${t.prioridad}: ${c.prioridad}</span>
+                        <span class="${c.prioridad === 'High' ? 'priority-high' : (c.prioridad === 'Medium' ? 'priority-medium' : 'priority-low')}">
+                            ${t.prioridad}: ${c.prioridad}
+                        </span>
                     </div>
                 </div>
             `).join('');
             
-            // Eventos de cambio en los checkboxes
             document.querySelectorAll('.check-riesgo').forEach(cb => {
                 cb.removeEventListener('change', actualizarRiesgo);
                 cb.addEventListener('change', actualizarRiesgo);
             });
             
-            // Eventos de inputs
             const velocidadInput = document.getElementById('velocidad');
             const distanciaInput = document.getElementById('distancia');
             const climaSelect = document.getElementById('clima');
@@ -178,7 +169,6 @@ async function cargarChequeo() {
             if (viaSelect) viaSelect.addEventListener('change', actualizarRiesgo);
             if (btnCalcular) btnCalcular.addEventListener('click', actualizarRiesgo);
             
-            // Calcular riesgo inicial
             setTimeout(() => actualizarRiesgo(), 500);
         }
     } catch(e) { container.innerHTML = '<div class="error-message">Error</div>'; }
@@ -238,15 +228,12 @@ async function actualizarRiesgo() {
     }
 }
 
-// Eventos globales
 document.getElementById('btnIdioma')?.addEventListener('click', cambiarIdioma);
 
-// Verificar autenticación
 const token = localStorage.getItem('ride_token');
 const usuario = localStorage.getItem('ride_usuario');
 if (!token || !usuario) window.location.href = '/';
 
-// Inicializar
 aplicarTextos();
 cargarNormas();
 cargarChequeo();

@@ -1,4 +1,4 @@
-// ==================== VERSIÓN CON TRADUCCIÓN COMPLETA ====================
+// ==================== VERSIÓN COMPLETA CON TRADUCCIÓN ====================
 console.log('✅ moto.js cargado');
 
 const textos = {
@@ -23,13 +23,9 @@ const textos = {
         prioridad: "Prioridad",
         buen_estado: "en buen estado",
         cargando: "Cargando...",
+        evaluando: "Calculando riesgo...",
         multa: "Multa tipo",
-        articulo: "Artículo",
-        seguridad_activa: "🛑 Seguridad Activa (Frenos y Luces)",
-        seguridad_pasiva: "🧤 Seguridad Pasiva (Equipo)",
-        motor_transmision: "⚙️ Motor y Transmisión",
-        suspension_neumaticos: "🛞 Suspensión y Neumáticos",
-        sistema_electrico: "🔋 Sistema Eléctrico"
+        articulo: "Artículo"
     },
     en: {
         titulo: "🏍️ Motorcycle Safety",
@@ -52,16 +48,11 @@ const textos = {
         prioridad: "Priority",
         buen_estado: "in good condition",
         cargando: "Loading...",
+        evaluando: "Calculating risk...",
         multa: "Fine type",
-        articulo: "Article",
-        seguridad_activa: "🛑 Active Safety (Brakes & Lights)",
-        seguridad_pasiva: "🧤 Passive Safety (Gear)",
-        motor_transmision: "⚙️ Engine & Transmission",
-        suspension_neumaticos: "🛞 Suspension & Tyres",
-        sistema_electrico: "🔋 Electrical System"
+        articulo: "Article"
     }
 };
-    
 
 let idiomaActual = localStorage.getItem('ride_idioma') || 'es';
 
@@ -154,7 +145,9 @@ async function cargarChequeo() {
                     <div style="flex:1">
                         <strong>${c.nom_comp}</strong><br>
                         <small>${c.estado_opt}</small><br>
-                        <span class="${c.prioridad === 'Alta' ? 'priority-high' : 'priority-medium'}">${t.prioridad}: ${c.prioridad}</span>
+                        <span class="${c.prioridad === 'High' ? 'priority-high' : (c.prioridad === 'Medium' ? 'priority-medium' : 'priority-low')}">
+                            ${t.prioridad}: ${c.prioridad}
+                        </span>
                     </div>
                 </div>
             `).join('');
@@ -195,7 +188,7 @@ async function actualizarRiesgo() {
     
     const divResultado = document.getElementById('resultado-riesgo');
     if (!divResultado) return;
-    divResultado.innerHTML = `<div class="loading">${textos[idiomaActual].cargando}</div>`;
+    divResultado.innerHTML = `<div class="loading">${textos[idiomaActual].evaluando}</div>`;
     
     try {
         const response = await fetch('/api/riesgo/calcular', {
