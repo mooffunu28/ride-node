@@ -1,4 +1,4 @@
-// ==================== VERSIÓN CON TRADUCCIÓN COMPLETA ====================
+// ==================== VERSIÓN CON TRADUCCIÓN COMPLETA DE CATEGORÍAS ====================
 console.log('✅ moto.js cargado');
 
 const textos = {
@@ -24,7 +24,12 @@ const textos = {
         buen_estado: "en buen estado",
         cargando: "Cargando...",
         multa: "Multa tipo",
-        articulo: "Artículo"
+        articulo: "Artículo",
+        seguridad_activa: "🛑 Seguridad Activa (Frenos y Luces)",
+        seguridad_pasiva: "🧤 Seguridad Pasiva (Equipo)",
+        motor_transmision: "⚙️ Motor y Transmisión",
+        suspension_neumaticos: "🛞 Suspensión y Neumáticos",
+        sistema_electrico: "🔋 Sistema Eléctrico"
     },
     en: {
         titulo: "🏍️ Motorcycle Safety",
@@ -48,7 +53,12 @@ const textos = {
         buen_estado: "in good condition",
         cargando: "Loading...",
         multa: "Fine type",
-        articulo: "Article"
+        articulo: "Article",
+        seguridad_activa: "🛑 Active Safety (Brakes & Lights)",
+        seguridad_pasiva: "🧤 Passive Safety (Gear)",
+        motor_transmision: "⚙️ Engine & Transmission",
+        suspension_neumaticos: "🛞 Suspension & Tyres",
+        sistema_electrico: "🔋 Electrical System"
     }
 };
 
@@ -137,16 +147,83 @@ async function cargarChequeo() {
         const data = await res.json();
         if (data.data && data.data.length > 0) {
             const t = textos[idiomaActual];
-            container.innerHTML = data.data.map(c => `
-                <div class="checklist-item">
-                    <input type="checkbox" class="check-riesgo" data-nombre="${c.nom_comp}" checked>
-                    <div style="flex:1">
-                        <strong>${c.nom_comp}</strong><br>
-                        <small>${c.estado_opt}</small><br>
-                        <span class="${c.prioridad === 'Alta' ? 'priority-high' : 'priority-medium'}">${t.prioridad}: ${c.prioridad}</span>
-                    </div>
+            
+            // Agrupar componentes por categoría
+            const grupos = {
+                seguridad_activa: data.data.filter(c => c.nom_comp.includes('Frenos') || c.nom_comp.includes('Luces')),
+                seguridad_pasiva: data.data.filter(c => c.nom_comp === 'Casco' || c.nom_comp === 'Chaleco Reflectivo' || c.nom_comp === 'Guantes' || c.nom_comp === 'Botas' || c.nom_comp === 'Chaquetón'),
+                motor_transmision: data.data.filter(c => c.nom_comp === 'Cadena' || c.nom_comp === 'Aceite de Motor' || c.nom_comp === 'Bujías' || c.nom_comp === 'Filtro de Aire'),
+                suspension_neumaticos: data.data.filter(c => c.nom_comp === 'Neumáticos' || c.nom_comp.includes('Suspensión')),
+                sistema_electrico: data.data.filter(c => c.nom_comp === 'Batería' || c.nom_comp === 'Espejos Retrovisores' || c.nom_comp === 'Direccionales' || c.nom_comp === 'Matrícula')
+            };
+            
+            container.innerHTML = `
+                <div class="checklist-group">
+                    <h3 class="group-title">${t.seguridad_activa}</h3>
+                    ${grupos.seguridad_activa.map(c => `
+                        <div class="checklist-item">
+                            <input type="checkbox" class="check-riesgo" data-nombre="${c.nom_comp}" checked>
+                            <div style="flex:1">
+                                <strong>${c.nom_comp}</strong><br>
+                                <small>${c.estado_opt}</small><br>
+                                <span class="${c.prioridad === 'Alta' ? 'priority-high' : 'priority-medium'}">${t.prioridad}: ${c.prioridad}</span>
+                            </div>
+                        </div>
+                    `).join('')}
                 </div>
-            `).join('');
+                <div class="checklist-group">
+                    <h3 class="group-title">${t.seguridad_pasiva}</h3>
+                    ${grupos.seguridad_pasiva.map(c => `
+                        <div class="checklist-item">
+                            <input type="checkbox" class="check-riesgo" data-nombre="${c.nom_comp}" checked>
+                            <div style="flex:1">
+                                <strong>${c.nom_comp}</strong><br>
+                                <small>${c.estado_opt}</small><br>
+                                <span class="${c.prioridad === 'Alta' ? 'priority-high' : 'priority-medium'}">${t.prioridad}: ${c.prioridad}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="checklist-group">
+                    <h3 class="group-title">${t.motor_transmision}</h3>
+                    ${grupos.motor_transmision.map(c => `
+                        <div class="checklist-item">
+                            <input type="checkbox" class="check-riesgo" data-nombre="${c.nom_comp}" checked>
+                            <div style="flex:1">
+                                <strong>${c.nom_comp}</strong><br>
+                                <small>${c.estado_opt}</small><br>
+                                <span class="${c.prioridad === 'Alta' ? 'priority-high' : 'priority-medium'}">${t.prioridad}: ${c.prioridad}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="checklist-group">
+                    <h3 class="group-title">${t.suspension_neumaticos}</h3>
+                    ${grupos.suspension_neumaticos.map(c => `
+                        <div class="checklist-item">
+                            <input type="checkbox" class="check-riesgo" data-nombre="${c.nom_comp}" checked>
+                            <div style="flex:1">
+                                <strong>${c.nom_comp}</strong><br>
+                                <small>${c.estado_opt}</small><br>
+                                <span class="${c.prioridad === 'Alta' ? 'priority-high' : 'priority-medium'}">${t.prioridad}: ${c.prioridad}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="checklist-group">
+                    <h3 class="group-title">${t.sistema_electrico}</h3>
+                    ${grupos.sistema_electrico.map(c => `
+                        <div class="checklist-item">
+                            <input type="checkbox" class="check-riesgo" data-nombre="${c.nom_comp}" checked>
+                            <div style="flex:1">
+                                <strong>${c.nom_comp}</strong><br>
+                                <small>${c.estado_opt}</small><br>
+                                <span class="${c.prioridad === 'Alta' ? 'priority-high' : 'priority-medium'}">${t.prioridad}: ${c.prioridad}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
             
             document.querySelectorAll('.check-riesgo').forEach(cb => {
                 cb.removeEventListener('change', actualizarRiesgo);

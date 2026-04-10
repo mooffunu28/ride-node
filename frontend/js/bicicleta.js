@@ -1,4 +1,4 @@
-// ==================== VERSIÓN CON TRADUCCIÓN COMPLETA ====================
+// ==================== VERSIÓN CON TRADUCCIÓN COMPLETA DE CATEGORÍAS ====================
 console.log('✅ bicicleta.js cargado');
 
 const textos = {
@@ -24,7 +24,10 @@ const textos = {
         buen_estado: "en buen estado",
         cargando: "Cargando...",
         multa: "Multa tipo",
-        articulo: "Artículo"
+        articulo: "Artículo",
+        seguridad_mecanica: "🔧 Seguridad Mecánica",
+        seguridad_equipo: "🛡️ Equipo de Protección",
+        documentacion: "📄 Documentación"
     },
     en: {
         titulo: "🚲 Bicycle Safety",
@@ -48,7 +51,10 @@ const textos = {
         buen_estado: "in good condition",
         cargando: "Loading...",
         multa: "Fine type",
-        articulo: "Article"
+        articulo: "Article",
+        seguridad_mecanica: "🔧 Mechanical Safety",
+        seguridad_equipo: "🛡️ Protective Gear",
+        documentacion: "📄 Documentation"
     }
 };
 
@@ -57,38 +63,28 @@ let idiomaActual = localStorage.getItem('ride_idioma') || 'es';
 function aplicarTextos() {
     const t = textos[idiomaActual];
     
-    // Títulos principales
     document.getElementById('titulo').innerHTML = t.titulo;
     document.getElementById('subtitulo').innerHTML = t.subtitulo;
     document.getElementById('tituloNormas').innerHTML = t.normas;
     document.getElementById('tituloChequeo').innerHTML = t.chequeo;
     document.getElementById('tituloRiesgo').innerHTML = t.riesgo;
-    
-    // Botones
     document.getElementById('btnCalcularTexto').innerHTML = t.evaluar;
     document.getElementById('btnIdioma').innerHTML = idiomaActual === 'es' ? '🌐 English' : '🌐 Español';
     
-    // Labels de inputs
     const labelVelocidad = document.getElementById('labelVelocidad');
     if (labelVelocidad) labelVelocidad.innerHTML = t.velocidad;
-    
     const labelDistancia = document.getElementById('labelDistancia');
     if (labelDistancia) labelDistancia.innerHTML = t.distancia;
-    
     const labelClima = document.getElementById('labelClima');
     if (labelClima) labelClima.innerHTML = t.clima;
-    
     const labelTipoVia = document.getElementById('labelTipoVia');
     if (labelTipoVia) labelTipoVia.innerHTML = t.tipo_via;
     
-    // Placeholders
     const velocidadInput = document.getElementById('velocidad');
     if (velocidadInput) velocidadInput.placeholder = t.velocidad;
-    
     const distanciaInput = document.getElementById('distancia');
     if (distanciaInput) distanciaInput.placeholder = t.distancia;
     
-    // Select de clima
     const climaSelect = document.getElementById('clima');
     if (climaSelect) {
         climaSelect.options[0].text = t.clima_dia;
@@ -97,7 +93,6 @@ function aplicarTextos() {
         climaSelect.options[3].text = t.clima_niebla;
     }
     
-    // Select de tipo de vía
     const viaSelect = document.getElementById('tipo_via');
     if (viaSelect) {
         viaSelect.options[0].text = t.via_urbana;
@@ -148,24 +143,72 @@ async function cargarChequeo() {
         const data = await res.json();
         if (data.data && data.data.length > 0) {
             const t = textos[idiomaActual];
-            container.innerHTML = data.data.map(c => `
-                <div class="checklist-item">
-                    <input type="checkbox" class="check-riesgo" data-nombre="${c.nom_comp}" checked>
-                    <div style="flex:1">
-                        <strong>${c.nom_comp}</strong><br>
-                        <small>${c.estado_opt}</small><br>
-                        <span class="${c.prioridad === 'Alta' ? 'priority-high' : 'priority-medium'}">${t.prioridad}: ${c.prioridad}</span>
-                    </div>
-                </div>
-            `).join('');
             
-            // Eventos de cambio en los checkboxes
+            // Agrupar componentes por categoría
+            const grupos = {
+                seguridad_mecanica: data.data.filter(c => 
+                    c.nom_comp === 'Frenos' || c.nom_comp === 'Frenos Delanteros' || c.nom_comp === 'Frenos Traseros' ||
+                    c.nom_comp === 'Luces' || c.nom_comp === 'Luces Delantera' || c.nom_comp === 'Luces Trasera' ||
+                    c.nom_comp === 'Neumáticos' || c.nom_comp === 'Cámaras' || c.nom_comp === 'Cadena' ||
+                    c.nom_comp === 'Dirección' || c.nom_comp === 'Sillín' || c.nom_comp === 'Pedales' ||
+                    c.nom_comp === 'Cambios' || c.nom_comp === 'Manillar' || c.nom_comp === 'Piñones' || c.nom_comp === 'Plato' ||
+                    c.nom_comp === 'Direccionales'),
+                seguridad_equipo: data.data.filter(c => 
+                    c.nom_comp === 'Casco' || c.nom_comp === 'Guantes' || c.nom_comp === 'Gafas' || 
+                    c.nom_comp === 'Chaleco Reflectivo' || c.nom_comp === 'Timbre'),
+                documentacion: data.data.filter(c => 
+                    c.nom_comp === 'Kit de Herramientas' || c.nom_comp === 'Botiquín' || 
+                    c.nom_comp === 'Documentación' || c.nom_comp === 'Teléfono de Emergencias' || 
+                    c.nom_comp === 'Agua y Alimentos' || c.nom_comp === 'Kit de Primeros Auxilios')
+            };
+            
+            container.innerHTML = `
+                <div class="checklist-group">
+                    <h3 class="group-title">${t.seguridad_mecanica}</h3>
+                    ${grupos.seguridad_mecanica.map(c => `
+                        <div class="checklist-item">
+                            <input type="checkbox" class="check-riesgo" data-nombre="${c.nom_comp}" checked>
+                            <div style="flex:1">
+                                <strong>${c.nom_comp}</strong><br>
+                                <small>${c.estado_opt}</small><br>
+                                <span class="${c.prioridad === 'Alta' ? 'priority-high' : 'priority-medium'}">${t.prioridad}: ${c.prioridad}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="checklist-group">
+                    <h3 class="group-title">${t.seguridad_equipo}</h3>
+                    ${grupos.seguridad_equipo.map(c => `
+                        <div class="checklist-item">
+                            <input type="checkbox" class="check-riesgo" data-nombre="${c.nom_comp}" checked>
+                            <div style="flex:1">
+                                <strong>${c.nom_comp}</strong><br>
+                                <small>${c.estado_opt}</small><br>
+                                <span class="${c.prioridad === 'Alta' ? 'priority-high' : 'priority-medium'}">${t.prioridad}: ${c.prioridad}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="checklist-group">
+                    <h3 class="group-title">${t.documentacion}</h3>
+                    ${grupos.documentacion.map(c => `
+                        <div class="checklist-item">
+                            <input type="checkbox" class="check-riesgo" data-nombre="${c.nom_comp}" checked>
+                            <div style="flex:1">
+                                <strong>${c.nom_comp}</strong><br>
+                                <small>${c.estado_opt}</small><br>
+                                <span class="${c.prioridad === 'Alta' ? 'priority-high' : 'priority-medium'}">${t.prioridad}: ${c.prioridad}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
             document.querySelectorAll('.check-riesgo').forEach(cb => {
                 cb.removeEventListener('change', actualizarRiesgo);
                 cb.addEventListener('change', actualizarRiesgo);
             });
             
-            // Eventos de inputs
             const velocidadInput = document.getElementById('velocidad');
             const distanciaInput = document.getElementById('distancia');
             const climaSelect = document.getElementById('clima');
@@ -178,7 +221,6 @@ async function cargarChequeo() {
             if (viaSelect) viaSelect.addEventListener('change', actualizarRiesgo);
             if (btnCalcular) btnCalcular.addEventListener('click', actualizarRiesgo);
             
-            // Calcular riesgo inicial
             setTimeout(() => actualizarRiesgo(), 500);
         }
     } catch(e) { container.innerHTML = '<div class="error-message">Error</div>'; }
@@ -198,7 +240,7 @@ async function actualizarRiesgo() {
     
     const divResultado = document.getElementById('resultado-riesgo');
     if (!divResultado) return;
-    divResultado.innerHTML = `<div class="loading">${textos[idiomaActual].evaluando}</div>`;
+    divResultado.innerHTML = `<div class="loading">${textos[idiomaActual].cargando}</div>`;
     
     try {
         const response = await fetch('/api/riesgo/calcular', {
@@ -238,15 +280,12 @@ async function actualizarRiesgo() {
     }
 }
 
-// Eventos globales
 document.getElementById('btnIdioma')?.addEventListener('click', cambiarIdioma);
 
-// Verificar autenticación
 const token = localStorage.getItem('ride_token');
 const usuario = localStorage.getItem('ride_usuario');
 if (!token || !usuario) window.location.href = '/';
 
-// Inicializar
 aplicarTextos();
 cargarNormas();
 cargarChequeo();
