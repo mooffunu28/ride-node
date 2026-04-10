@@ -1,4 +1,4 @@
-// ==================== VERSIÓN DEFINITIVA ====================
+// ==================== VERSIÓN SIMPLIFICADA Y FUNCIONAL ====================
 console.log('✅ bicicleta.js cargado');
 
 const textos = {
@@ -75,50 +75,56 @@ async function cargarChequeo() {
                 </label>
             `).join('');
             
-            // Sincronizar checkboxes
+            // ==================== CONFIGURAR EVENTOS ====================
+            // Cuando se marca un checkbox del checklist preventivo
             document.querySelectorAll('.check-componente').forEach(cb => {
-                cb.addEventListener('change', function() {
+                cb.onchange = function() {
                     const nombre = this.getAttribute('data-nombre');
                     const riesgoCb = document.querySelector(`.check-riesgo[data-nombre="${nombre}"]`);
                     if (riesgoCb) riesgoCb.checked = this.checked;
-                    evaluarRiesgoViaje();
-                });
+                    calcularRiesgo();
+                };
             });
             
+            // Cuando se marca un checkbox de la calculadora
             document.querySelectorAll('.check-riesgo').forEach(cb => {
-                cb.addEventListener('change', function() {
+                cb.onchange = function() {
                     const nombre = this.getAttribute('data-nombre');
                     const preventivoCb = document.querySelector(`.check-componente[data-nombre="${nombre}"]`);
                     if (preventivoCb) preventivoCb.checked = this.checked;
-                    evaluarRiesgoViaje();
-                });
+                    calcularRiesgo();
+                };
             });
             
-            configurarAutoUpdate();
-            evaluarRiesgoViaje();
+            // Inputs de velocidad, distancia, clima, tipo_vía
+            document.getElementById('velocidad').oninput = () => calcularRiesgo();
+            document.getElementById('distancia').oninput = () => calcularRiesgo();
+            document.getElementById('clima').onchange = () => calcularRiesgo();
+            document.getElementById('tipo_via').onchange = () => calcularRiesgo();
+            
+            // Botón calcular
+            document.getElementById('calcularRiesgo').onclick = () => calcularRiesgo();
+            
+            // Calcular riesgo inicial
+            setTimeout(() => calcularRiesgo(), 500);
         }
     } catch(e) { container.innerHTML = '<div class="error-message">Error</div>'; }
 }
 
-async function evaluarRiesgoViaje() {
-    console.log('🔄 Evaluando riesgo...');
-    
+async function calcularRiesgo() {
     const velocidad = parseInt(document.getElementById('velocidad')?.value) || 0;
     const distancia = parseInt(document.getElementById('distancia')?.value) || 0;
     const clima = document.getElementById('clima')?.value || 'dia';
     const tipoVia = document.getElementById('tipo_via')?.value || 'urbana';
     
-    // Leer TODOS los checkboxes de riesgo
+    // Leer todos los checkboxes de la calculadora
     const chequeo = {};
     document.querySelectorAll('.check-riesgo').forEach(cb => {
         const nombre = cb.getAttribute('data-nombre');
-        if (nombre) {
-            chequeo[nombre] = cb.checked;
-        }
+        if (nombre) chequeo[nombre] = cb.checked;
     });
     
-    console.log('📊 Chequeo enviado:', Object.keys(chequeo).length, 'componentes');
-    console.log('📊 Ejemplo:', Object.entries(chequeo).slice(0, 5));
+    console.log('📊 Calculando riesgo...', { velocidad, distancia, chequeo });
     
     const divResultado = document.getElementById('resultado-riesgo');
     if (!divResultado) return;
@@ -139,7 +145,8 @@ async function evaluarRiesgoViaje() {
             })
         });
         const resultado = await response.json();
-        console.log('📊 Puntaje recibido:', resultado.puntaje);
+        
+        console.log('📊 Resultado:', resultado.puntaje);
         
         let clase = '';
         let nivelTexto = '';
@@ -168,32 +175,13 @@ async function evaluarRiesgoViaje() {
         divResultado.innerHTML = `<div class="riesgo-critico">❌ Error: ${error.message}</div>`;
     }
 }
-function configurarAutoUpdate() {
-    function triggerAutoUpdate() {
-        if (timeoutAutoUpdate) clearTimeout(timeoutAutoUpdate);
-        timeoutAutoUpdate = setTimeout(() => evaluarRiesgoViaje(), 300);
-    }
-    
-    ['velocidad', 'distancia', 'clima', 'tipo_via'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.removeEventListener('input', triggerAutoUpdate);
-            el.removeEventListener('change', triggerAutoUpdate);
-            el.addEventListener('input', triggerAutoUpdate);
-            el.addEventListener('change', triggerAutoUpdate);
-        }
-    });
-    
-    console.log('✅ Auto-refresco configurado');
-}
 
-document.getElementById('btnIdioma')?.addEventListener('click', cambiarIdioma);
-document.getElementById('calcularRiesgo')?.addEventListener('click', evaluarRiesgoViaje);
-
+// Verificar autenticación
 const token = localStorage.getItem('ride_token');
 const usuario = localStorage.getItem('ride_usuario');
 if (!token || !usuario) window.location.href = '/';
 
+// Inicializar
 aplicarTextos();
 cargarNormas();
 cargarChequeo();
