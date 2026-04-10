@@ -1,13 +1,12 @@
-// ==================== VERSIÓN CORREGIDA CON SINCRONIZACIÓN Y AUTO-REFRESCO ====================
+// ==================== VERSIÓN CON CHECKBOXES MARCADOS POR DEFECTO ====================
 console.log('✅ moto.js cargado');
 
 const textos = {
-    es: { prioridad: "Prioridad", buen_estado: "en buen estado", cargando: "Cargando...", evaluando: "Evaluando riesgo..." },
-    en: { prioridad: "Priority", buen_estado: "in good condition", cargando: "Loading...", evaluando: "Assessing risk..." }
+    es: { prioridad: "Prioridad", buen_estado: "en buen estado", cargando: "Cargando...", evaluando: "Calculando riesgo..." },
+    en: { prioridad: "Priority", buen_estado: "in good condition", cargando: "Loading...", evaluando: "Calculating risk..." }
 };
 
 let idiomaActual = localStorage.getItem('ride_idioma') || 'es';
-let timeoutAutoUpdate = null;
 
 function aplicarTextos() {
     const btnIdioma = document.getElementById('btnIdioma');
@@ -57,7 +56,7 @@ async function cargarChequeo() {
         const res = await fetch(`/api/chequeo?tipo=Moto&idioma=${idiomaActual}`);
         const data = await res.json();
         if (data.data && data.data.length > 0) {
-            // Mostrar checklist preventivo
+            // Mostrar checklist preventivo (con checkboxes SIN marcar por defecto)
             container.innerHTML = data.data.map(c => `
                 <div class="checklist-item">
                     <input type="checkbox" class="check-componente" data-nombre="${c.nom_comp}">
@@ -69,128 +68,102 @@ async function cargarChequeo() {
                 </div>
             `).join('');
             
-            // Generar checkboxes para la calculadora de riesgo
+            // Mostrar checkboxes de la calculadora - MARCADOS POR DEFECTO (checked)
             checkContainer.innerHTML = data.data.map(c => `
                 <label class="checkbox-label">
-                    <input type="checkbox" class="check-riesgo" data-nombre="${c.nom_comp}">
+                    <input type="checkbox" class="check-riesgo" data-nombre="${c.nom_comp}" checked>
                     ${c.nom_comp} ${textos[idiomaActual].buen_estado}
                 </label>
             `).join('');
             
-            // ==================== SINCRONIZACIÓN ====================
-            // Función para sincronizar ambos conjuntos de checkboxes
-            function sincronizarCheckboxes() {
-                // Chequeo Preventivo -> Calculadora
-                document.querySelectorAll('.check-componente').forEach(cb => {
-                    cb.removeEventListener('change', sincronizarDePreventivoARiesgo);
-                    cb.addEventListener('change', sincronizarDePreventivoARiesgo);
+            // ==================== EVENTOS ====================
+            function actualizarRiesgo() {
+                const velocidad = parseInt(document.getElementById('velocidad')?.value) || 0;
+                const distancia = parseInt(document.getElementById('distancia')?.value) || 0;
+                const clima = document.getElementById('clima')?.value || 'dia';
+                const tipoVia = document.getElementById('tipo_via')?.value || 'urbana';
+                
+                // Leer el estado de los checkboxes de la calculadora
+                const chequeo = {};
+                document.querySelectorAll('.check-riesgo').forEach(cb => {
+                    const nombre = cb.getAttribute('data-nombre');
+                    if (nombre) chequeo[nombre] = cb.checked;
                 });
                 
-                // Calculadora -> Chequeo Preventivo
-                document.querySelectorAll('.check-riesgo').forEach(cb => {
-                    cb.removeEventListener('change', sincronizarDeRiesgoAPreventivo);
-                    cb.addEventListener('change', sincronizarDeRiesgoAPreventivo);
+                const divResultado = document.getElementById('resultado-riesgo');
+                if (!divResultado) return;
+                divResultado.innerHTML = `<div class="loading">${textos[idiomaActual].evaluando}</div>`;
+                
+                fetch('/api/riesgo/calcular', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        velocidad, distancia, clima, tipoVia, chequeo, 
+                        tipo_vehiculo: 'Moto', idioma: idiomaActual 
+                    })
+                })
+                .then(r => r.json())
+                .then(resultado => {
+                    let clase = '';
+                    let nivelTexto = '';
+                    if (resultado.nivel === 'critico') { 
+                        clase = 'riesgo-critico'; 
+                        nivelTexto = idiomaActual === 'es' ? '🚨 RIESGO CRÍTICO' : '🚨 CRITICAL RISK'; 
+                    } else if (resultado.nivel === 'moderado') { 
+                        clase = 'riesgo-moderado'; 
+                        nivelTexto = idiomaActual === 'es' ? '⚠️ RIESGO MODERADO' : '⚠️ MODERATE RISK'; 
+                    } else { 
+                        clase = 'riesgo-seguro'; 
+                        nivelTexto = idiomaActual === 'es' ? '✅ RIESGO BAJO' : '✅ LOW RISK'; 
+                    }
+                    
+                    divResultado.innerHTML = `
+                        <div class="${clase}" style="padding:0.8rem;">
+                            <strong>${nivelTexto}</strong>
+                            <p>${resultado.mensaje || ''}</p>
+                            <p><strong>📊 Puntaje:</strong> ${resultado.puntaje}/100</p>
+                            ${resultado.factores?.length ? `<strong>📋 Factores:</strong><ul>${resultado.factores.map(f => `<li>${f}</li>`).join('')}</ul>` : ''}
+                            ${resultado.recomendaciones?.length ? `<strong>✅ Recomendaciones:</strong><ul>${resultado.recomendaciones.map(r => `<li>${r}</li>`).join('')}</ul>` : ''}
+                        </div>
+                    `;
+                })
+                .catch(error => {
+                    divResultado.innerHTML = `<div class="riesgo-critico">❌ Error: ${error.message}</div>`;
                 });
             }
             
-            function sincronizarDePreventivoARiesgo() {
-                const nombre = this.getAttribute('data-nombre');
-                const checkboxRiesgo = document.querySelector(`.check-riesgo[data-nombre="${nombre}"]`);
-                if (checkboxRiesgo && checkboxRiesgo.checked !== this.checked) {
-                    checkboxRiesgo.checked = this.checked;
-                    checkboxRiesgo.dispatchEvent(new Event('change'));
-                }
-            }
+            // Sincronizar: Chequeo Preventivo -> Calculadora
+            document.querySelectorAll('.check-componente').forEach(cb => {
+                cb.addEventListener('change', function() {
+                    const nombre = this.getAttribute('data-nombre');
+                    const riesgoCb = document.querySelector(`.check-riesgo[data-nombre="${nombre}"]`);
+                    if (riesgoCb) riesgoCb.checked = this.checked;
+                    actualizarRiesgo();
+                });
+            });
             
-            function sincronizarDeRiesgoAPreventivo() {
-                const nombre = this.getAttribute('data-nombre');
-                const checkboxPreventivo = document.querySelector(`.check-componente[data-nombre="${nombre}"]`);
-                if (checkboxPreventivo && checkboxPreventivo.checked !== this.checked) {
-                    checkboxPreventivo.checked = this.checked;
-                }
-            }
+            // Sincronizar: Calculadora -> Chequeo Preventivo
+            document.querySelectorAll('.check-riesgo').forEach(cb => {
+                cb.addEventListener('change', function() {
+                    const nombre = this.getAttribute('data-nombre');
+                    const preventivoCb = document.querySelector(`.check-componente[data-nombre="${nombre}"]`);
+                    if (preventivoCb) preventivoCb.checked = this.checked;
+                    actualizarRiesgo();
+                });
+            });
             
-            sincronizarCheckboxes();
+            // Eventos de inputs
+            document.getElementById('velocidad').addEventListener('input', () => actualizarRiesgo());
+            document.getElementById('distancia').addEventListener('input', () => actualizarRiesgo());
+            document.getElementById('clima').addEventListener('change', () => actualizarRiesgo());
+            document.getElementById('tipo_via').addEventListener('change', () => actualizarRiesgo());
+            document.getElementById('calcularRiesgo').addEventListener('click', () => actualizarRiesgo());
             
-            // Configurar auto-refresco
-            configurarAutoUpdate();
-            evaluarRiesgoViaje();
+            // Calcular riesgo inicial (debería dar 0 porque todo está marcado)
+            setTimeout(() => actualizarRiesgo(), 500);
         }
     } catch(e) { container.innerHTML = '<div class="error-message">Error</div>'; }
 }
-
-async function evaluarRiesgoViaje() {
-    const velocidad = parseInt(document.getElementById('velocidad')?.value) || 0;
-    const distancia = parseInt(document.getElementById('distancia')?.value) || 0;
-    const clima = document.getElementById('clima')?.value || 'dia';
-    const tipoVia = document.getElementById('tipo_via')?.value || 'urbana';
-    
-    const checkboxes = document.querySelectorAll('.check-riesgo');
-    const chequeo = {};
-    checkboxes.forEach(cb => { chequeo[cb.getAttribute('data-nombre')] = cb.checked; });
-    
-    const divResultado = document.getElementById('resultado-riesgo');
-    if (!divResultado) return;
-    divResultado.innerHTML = `<div class="loading">${textos[idiomaActual].evaluando}</div>`;
-    
-    try {
-        const response = await fetch('/api/riesgo/calcular', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ velocidad, distancia, clima, tipoVia, chequeo, tipo_vehiculo: 'Moto', idioma: idiomaActual })
-        });
-        const resultado = await response.json();
-        
-        let clase = '';
-        let nivelTexto = '';
-        if (resultado.nivel === 'critico') { clase = 'riesgo-critico'; nivelTexto = idiomaActual === 'es' ? '🚨 RIESGO CRÍTICO' : '🚨 CRITICAL RISK'; }
-        else if (resultado.nivel === 'moderado') { clase = 'riesgo-moderado'; nivelTexto = idiomaActual === 'es' ? '⚠️ RIESGO MODERADO' : '⚠️ MODERATE RISK'; }
-        else { clase = 'riesgo-seguro'; nivelTexto = idiomaActual === 'es' ? '✅ RIESGO BAJO' : '✅ LOW RISK'; }
-        
-        divResultado.innerHTML = `
-            <div class="${clase}" style="padding:0.8rem;">
-                <strong>${nivelTexto}</strong>
-                <p>${resultado.mensaje || ''}</p>
-                <p><strong>📊 Puntaje:</strong> ${resultado.puntaje}/100</p>
-                ${resultado.factores?.length ? `<strong>📋 Factores:</strong><ul>${resultado.factores.map(f => `<li>${f}</li>`).join('')}</ul>` : ''}
-                ${resultado.recomendaciones?.length ? `<strong>✅ Recomendaciones:</strong><ul>${resultado.recomendaciones.map(r => `<li>${r}</li>`).join('')}</ul>` : ''}
-            </div>
-        `;
-    } catch (error) {
-        divResultado.innerHTML = `<div class="riesgo-critico">❌ Error: ${error.message}</div>`;
-    }
-}
-
-function configurarAutoUpdate() {
-    function triggerAutoUpdate() {
-        if (timeoutAutoUpdate) clearTimeout(timeoutAutoUpdate);
-        timeoutAutoUpdate = setTimeout(() => evaluarRiesgoViaje(), 400);
-    }
-    
-    // Inputs
-    ['velocidad', 'distancia', 'clima', 'tipo_via'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.removeEventListener('input', triggerAutoUpdate);
-            el.removeEventListener('change', triggerAutoUpdate);
-            el.addEventListener('input', triggerAutoUpdate);
-            el.addEventListener('change', triggerAutoUpdate);
-        }
-    });
-    
-    // Checkboxes de riesgo
-    const checkboxes = document.querySelectorAll('.check-riesgo');
-    checkboxes.forEach(cb => {
-        cb.removeEventListener('change', triggerAutoUpdate);
-        cb.addEventListener('change', triggerAutoUpdate);
-    });
-    
-    console.log('✅ Auto-refresco configurado');
-}
-
-// Eventos
-document.getElementById('btnIdioma')?.addEventListener('click', cambiarIdioma);
-document.getElementById('calcularRiesgo')?.addEventListener('click', evaluarRiesgoViaje);
 
 // Verificar autenticación
 const token = localStorage.getItem('ride_token');
