@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="/css/style.css">
     <style>
-        /* Botón de idioma - ESQUINA SUPERIOR IZQUIERDA */
+        
         .btn-idioma-flotante {
             position: fixed;
             top: 20px;
@@ -28,7 +28,7 @@
             transform: scale(1.02);
         }
         
-        /* Botón cerrar sesión - ESQUINA SUPERIOR DERECHA */
+        
         .logout-btn {
             position: fixed;
             top: 20px;
@@ -61,14 +61,14 @@
     </style>
 </head>
 <body>
-    <!-- Fondo con efecto de movimiento -->
+    
     <div class="bg-animation">
         <div class="bg-shape shape-1"></div>
         <div class="bg-shape shape-2"></div>
         <div class="bg-shape shape-3"></div>
     </div>
 
-    <!-- Botón de idioma flotante (ESQUINA IZQUIERDA) -->
+    
     <button id="btnIdiomaIndex" class="btn-idioma-flotante">
         🌐 English
     </button>
@@ -82,7 +82,7 @@
                 <p class="brand-subtitle">Road Information & Digital Enforcement</p>
             </div>
 
-            <!-- SECCIÓN LOGIN/REGISTRO -->
+            
             <div id="authSection">
                 <div class="auth-card">
                     <div class="auth-tabs">
@@ -94,7 +94,7 @@
                         </button>
                     </div>
 
-                    <!-- Formulario Login -->
+                    
                     <div id="loginForm" class="auth-form">
                         <div class="form-group">
                             <label for="login_correo"><i class="fas fa-envelope"></i> Correo electrónico</label>
@@ -110,7 +110,7 @@
                         </button>
                     </div>
 
-                    <!-- Formulario Registro -->
+                    
                     <div id="registerForm" class="auth-form hidden">
                         <div class="form-row">
                             <div class="form-group">
@@ -163,7 +163,7 @@
                 </div>
             </div>
 
-            <!-- SECCIÓN DASHBOARD (se muestra después de login) -->
+            
             <div id="dashboardSection" class="dashboard-container hidden">
                 <button class="logout-btn" onclick="cerrarSesion()">
                     <i class="fas fa-sign-out-alt"></i> Cerrar sesión
@@ -178,7 +178,7 @@
                 </div>
                 
                 <div class="vehicles-grid">
-                    <!-- Tarjeta Bicicleta -->
+                    
                     <div id="bikeCard" class="vehicle-card" onclick="seleccionarVehiculo('bicicleta')">
                         <div class="card-icon bike-icon">
                             <i class="fas fa-bicycle"></i>
