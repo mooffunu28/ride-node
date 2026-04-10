@@ -8,10 +8,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="/css/style.css">
     <style>
+        /* Botón de idioma - ESQUINA SUPERIOR IZQUIERDA */
         .btn-idioma-flotante {
             position: fixed;
             top: 20px;
-            right: 120px;
+            left: 20px;
             z-index: 1000;
             background: #1a3a3a;
             color: white;
@@ -26,12 +27,26 @@
             background: #2c7a5e;
             transform: scale(1.02);
         }
+        
+        /* Botón cerrar sesión - ESQUINA SUPERIOR DERECHA */
         .logout-btn {
             position: fixed;
             top: 20px;
             right: 20px;
+            background: #1a3a3a;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 40px;
+            cursor: pointer;
+            font-size: 0.9rem;
             z-index: 100;
         }
+        .logout-btn:hover {
+            background: #c00;
+        }
+        
+        /* Logo */
         .brand-logo {
             width: 80px;
             height: auto;
@@ -53,7 +68,7 @@
         <div class="bg-shape shape-3"></div>
     </div>
 
-    <!-- Botón de idioma flotante -->
+    <!-- Botón de idioma flotante (ESQUINA IZQUIERDA) -->
     <button id="btnIdiomaIndex" class="btn-idioma-flotante">
         🌐 English
     </button>
@@ -79,6 +94,7 @@
                         </button>
                     </div>
 
+                    <!-- Formulario Login -->
                     <div id="loginForm" class="auth-form">
                         <div class="form-group">
                             <label for="login_correo"><i class="fas fa-envelope"></i> Correo electrónico</label>
@@ -94,6 +110,7 @@
                         </button>
                     </div>
 
+                    <!-- Formulario Registro -->
                     <div id="registerForm" class="auth-form hidden">
                         <div class="form-row">
                             <div class="form-group">
@@ -146,7 +163,7 @@
                 </div>
             </div>
 
-            <!-- SECCIÓN DASHBOARD -->
+            <!-- SECCIÓN DASHBOARD (se muestra después de login) -->
             <div id="dashboardSection" class="dashboard-container hidden">
                 <button class="logout-btn" onclick="cerrarSesion()">
                     <i class="fas fa-sign-out-alt"></i> Cerrar sesión
@@ -161,6 +178,7 @@
                 </div>
                 
                 <div class="vehicles-grid">
+                    <!-- Tarjeta Bicicleta -->
                     <div id="bikeCard" class="vehicle-card" onclick="seleccionarVehiculo('bicicleta')">
                         <div class="card-icon bike-icon">
                             <i class="fas fa-bicycle"></i>
@@ -170,6 +188,7 @@
                         <button class="select-btn">Acceder <i class="fas fa-arrow-right"></i></button>
                     </div>
                     
+                    <!-- Tarjeta Moto -->
                     <div id="motoCard" class="vehicle-card" onclick="seleccionarVehiculo('moto')">
                         <div class="card-icon moto-icon">
                             <i class="fas fa-motorcycle"></i>
