@@ -1,4 +1,4 @@
-// ==================== VERSIÓN CORREGIDA CON SINCRONIZACIÓN Y AUTO-REFRESCO ====================
+// ==================== VERSIÓN DEFINITIVA - FORZAR ACTUALIZACIÓN ====================
 console.log('✅ bicicleta.js cargado');
 
 const textos = {
@@ -57,7 +57,6 @@ async function cargarChequeo() {
         const res = await fetch(`/api/chequeo?tipo=Cicla&idioma=${idiomaActual}`);
         const data = await res.json();
         if (data.data && data.data.length > 0) {
-            // Mostrar checklist preventivo
             container.innerHTML = data.data.map(c => `
                 <div class="checklist-item">
                     <input type="checkbox" class="check-componente" data-nombre="${c.nom_comp}">
@@ -69,7 +68,6 @@ async function cargarChequeo() {
                 </div>
             `).join('');
             
-            // Generar checkboxes para la calculadora de riesgo
             checkContainer.innerHTML = data.data.map(c => `
                 <label class="checkbox-label">
                     <input type="checkbox" class="check-riesgo" data-nombre="${c.nom_comp}">
@@ -77,46 +75,49 @@ async function cargarChequeo() {
                 </label>
             `).join('');
             
-            // ==================== SINCRONIZACIÓN ====================
-            function sincronizarCheckboxes() {
-                document.querySelectorAll('.check-componente').forEach(cb => {
-                    cb.removeEventListener('change', sincronizarDePreventivoARiesgo);
-                    cb.addEventListener('change', sincronizarDePreventivoARiesgo);
-                });
-                
-                document.querySelectorAll('.check-riesgo').forEach(cb => {
-                    cb.removeEventListener('change', sincronizarDeRiesgoAPreventivo);
-                    cb.addEventListener('change', sincronizarDeRiesgoAPreventivo);
-                });
-            }
-            
-            function sincronizarDePreventivoARiesgo() {
-                const nombre = this.getAttribute('data-nombre');
-                const checkboxRiesgo = document.querySelector(`.check-riesgo[data-nombre="${nombre}"]`);
-                if (checkboxRiesgo && checkboxRiesgo.checked !== this.checked) {
-                    checkboxRiesgo.checked = this.checked;
-                    checkboxRiesgo.dispatchEvent(new Event('change'));
-                }
-            }
-            
-            function sincronizarDeRiesgoAPreventivo() {
-                const nombre = this.getAttribute('data-nombre');
-                const checkboxPreventivo = document.querySelector(`.check-componente[data-nombre="${nombre}"]`);
-                if (checkboxPreventivo && checkboxPreventivo.checked !== this.checked) {
-                    checkboxPreventivo.checked = this.checked;
-                }
-            }
-            
             sincronizarCheckboxes();
-            
-            // Configurar auto-refresco
             configurarAutoUpdate();
-            evaluarRiesgoViaje();
+            
+            // Forzar evaluación inicial
+            setTimeout(() => evaluarRiesgoViaje(), 500);
         }
     } catch(e) { container.innerHTML = '<div class="error-message">Error</div>'; }
 }
 
+function sincronizarCheckboxes() {
+    // Chequeo Preventivo -> Calculadora
+    document.querySelectorAll('.check-componente').forEach(cb => {
+        cb.removeEventListener('change', sincronizarDePreventivoARiesgo);
+        cb.addEventListener('change', sincronizarDePreventivoARiesgo);
+    });
+    
+    // Calculadora -> Chequeo Preventivo
+    document.querySelectorAll('.check-riesgo').forEach(cb => {
+        cb.removeEventListener('change', sincronizarDeRiesgoAPreventivo);
+        cb.addEventListener('change', sincronizarDeRiesgoAPreventivo);
+    });
+}
+
+function sincronizarDePreventivoARiesgo() {
+    const nombre = this.getAttribute('data-nombre');
+    const checkboxRiesgo = document.querySelector(`.check-riesgo[data-nombre="${nombre}"]`);
+    if (checkboxRiesgo && checkboxRiesgo.checked !== this.checked) {
+        checkboxRiesgo.checked = this.checked;
+        checkboxRiesgo.dispatchEvent(new Event('change'));
+    }
+}
+
+function sincronizarDeRiesgoAPreventivo() {
+    const nombre = this.getAttribute('data-nombre');
+    const checkboxPreventivo = document.querySelector(`.check-componente[data-nombre="${nombre}"]`);
+    if (checkboxPreventivo && checkboxPreventivo.checked !== this.checked) {
+        checkboxPreventivo.checked = this.checked;
+    }
+}
+
 async function evaluarRiesgoViaje() {
+    console.log('🔄 Evaluando riesgo...');
+    
     const velocidad = parseInt(document.getElementById('velocidad')?.value) || 0;
     const distancia = parseInt(document.getElementById('distancia')?.value) || 0;
     const clima = document.getElementById('clima')?.value || 'dia';
@@ -124,7 +125,11 @@ async function evaluarRiesgoViaje() {
     
     const checkboxes = document.querySelectorAll('.check-riesgo');
     const chequeo = {};
-    checkboxes.forEach(cb => { chequeo[cb.getAttribute('data-nombre')] = cb.checked; });
+    checkboxes.forEach(cb => { 
+        chequeo[cb.getAttribute('data-nombre')] = cb.checked; 
+    });
+    
+    console.log('📤 Enviando:', { velocidad, distancia, clima, tipoVia, chequeo });
     
     const divResultado = document.getElementById('resultado-riesgo');
     if (!divResultado) return;
@@ -134,15 +139,31 @@ async function evaluarRiesgoViaje() {
         const response = await fetch('/api/riesgo/calcular', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ velocidad, distancia, clima, tipoVia, chequeo, tipo_vehiculo: 'Cicla', idioma: idiomaActual })
+            body: JSON.stringify({ 
+                velocidad, 
+                distancia, 
+                clima, 
+                tipoVia, 
+                chequeo, 
+                tipo_vehiculo: 'Cicla', 
+                idioma: idiomaActual 
+            })
         });
         const resultado = await response.json();
+        console.log('📥 Respuesta:', resultado);
         
         let clase = '';
         let nivelTexto = '';
-        if (resultado.nivel === 'critico') { clase = 'riesgo-critico'; nivelTexto = idiomaActual === 'es' ? '🚨 RIESGO CRÍTICO' : '🚨 CRITICAL RISK'; }
-        else if (resultado.nivel === 'moderado') { clase = 'riesgo-moderado'; nivelTexto = idiomaActual === 'es' ? '⚠️ RIESGO MODERADO' : '⚠️ MODERATE RISK'; }
-        else { clase = 'riesgo-seguro'; nivelTexto = idiomaActual === 'es' ? '✅ RIESGO BAJO' : '✅ LOW RISK'; }
+        if (resultado.nivel === 'critico') { 
+            clase = 'riesgo-critico'; 
+            nivelTexto = idiomaActual === 'es' ? '🚨 RIESGO CRÍTICO' : '🚨 CRITICAL RISK'; 
+        } else if (resultado.nivel === 'moderado') { 
+            clase = 'riesgo-moderado'; 
+            nivelTexto = idiomaActual === 'es' ? '⚠️ RIESGO MODERADO' : '⚠️ MODERATE RISK'; 
+        } else { 
+            clase = 'riesgo-seguro'; 
+            nivelTexto = idiomaActual === 'es' ? '✅ RIESGO BAJO' : '✅ LOW RISK'; 
+        }
         
         divResultado.innerHTML = `
             <div class="${clase}" style="padding:0.8rem;">
@@ -154,6 +175,7 @@ async function evaluarRiesgoViaje() {
             </div>
         `;
     } catch (error) {
+        console.error('❌ Error:', error);
         divResultado.innerHTML = `<div class="riesgo-critico">❌ Error: ${error.message}</div>`;
     }
 }
@@ -164,7 +186,6 @@ function configurarAutoUpdate() {
         timeoutAutoUpdate = setTimeout(() => evaluarRiesgoViaje(), 400);
     }
     
-    // Inputs
     ['velocidad', 'distancia', 'clima', 'tipo_via'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -175,9 +196,7 @@ function configurarAutoUpdate() {
         }
     });
     
-    // Checkboxes de riesgo
-    const checkboxes = document.querySelectorAll('.check-riesgo');
-    checkboxes.forEach(cb => {
+    document.querySelectorAll('.check-riesgo').forEach(cb => {
         cb.removeEventListener('change', triggerAutoUpdate);
         cb.addEventListener('change', triggerAutoUpdate);
     });
