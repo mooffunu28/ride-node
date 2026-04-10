@@ -6,7 +6,7 @@ const db = require('../db/connection');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'mi_secreto_super_seguro';
 
-// POST /api/auth/register - Registrar nuevo usuario
+
 router.post('/register', async (req, res) => {
     try {
         const { nombre, correo, password, edad, tipo_vehiculo, cil_val } = req.body;
@@ -44,7 +44,7 @@ router.post('/register', async (req, res) => {
     }
 });
 
-// POST /api/auth/login - Iniciar sesión
+
 router.post('/login', async (req, res) => {
     try {
         const { correo, password } = req.body;
@@ -102,7 +102,7 @@ router.post('/login', async (req, res) => {
     }
 });
 
-// GET /api/auth/me - Obtener usuario actual
+
 router.get('/me', async (req, res) => {
     try {
         const token = req.headers.authorization?.split(' ')[1];
