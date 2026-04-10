@@ -101,21 +101,24 @@ async function cargarChequeo() {
 }
 
 async function evaluarRiesgoViaje() {
-    console.log('🔄 Evaluando riesgo con checkboxes actuales...');
+    console.log('🔄 Evaluando riesgo...');
     
     const velocidad = parseInt(document.getElementById('velocidad')?.value) || 0;
     const distancia = parseInt(document.getElementById('distancia')?.value) || 0;
     const clima = document.getElementById('clima')?.value || 'dia';
     const tipoVia = document.getElementById('tipo_via')?.value || 'urbana';
     
-    // Leer TODOS los checkboxes de riesgo en este momento
+    // Leer TODOS los checkboxes de riesgo
     const chequeo = {};
     document.querySelectorAll('.check-riesgo').forEach(cb => {
         const nombre = cb.getAttribute('data-nombre');
-        chequeo[nombre] = cb.checked;
+        if (nombre) {
+            chequeo[nombre] = cb.checked;
+        }
     });
     
-    console.log('📊 Chequeo actual:', chequeo);
+    console.log('📊 Chequeo enviado:', Object.keys(chequeo).length, 'componentes');
+    console.log('📊 Ejemplo:', Object.entries(chequeo).slice(0, 5));
     
     const divResultado = document.getElementById('resultado-riesgo');
     if (!divResultado) return;
@@ -136,7 +139,7 @@ async function evaluarRiesgoViaje() {
             })
         });
         const resultado = await response.json();
-        console.log('📊 Resultado:', resultado);
+        console.log('📊 Puntaje recibido:', resultado.puntaje);
         
         let clase = '';
         let nivelTexto = '';
@@ -165,7 +168,6 @@ async function evaluarRiesgoViaje() {
         divResultado.innerHTML = `<div class="riesgo-critico">❌ Error: ${error.message}</div>`;
     }
 }
-
 function configurarAutoUpdate() {
     function triggerAutoUpdate() {
         if (timeoutAutoUpdate) clearTimeout(timeoutAutoUpdate);
